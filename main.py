@@ -108,33 +108,6 @@ class Model(object):
         for child in children:
             self.push(child)
             self.error_sum += child.error * child.area
-    # Create gif, not necrssary
-    def render(self, path, max_depth=None):
-        m = OUTPUT_SCALE
-        dx, dy = (PADDING, PADDING)
-        im = Image.new('RGB', (self.width * m + dx, self.height * m + dy))
-        draw = ImageDraw.Draw(im)
-        draw.rectangle((0, 0, self.width * m, self.height * m), FILL_COLOR)
-        
-        frames_folder = 'frames'  # Specify the frames folder
-        
-        for i, quad in enumerate(self.root.get_leaf_nodes(max_depth)):
-            l, t, r, b = quad.box
-            box = (l * m + dx, t * m + dy, r * m - 1, b * m - 1)
-            if MODE == MODE_ELLIPSE:
-                draw.ellipse(box, quad.color)
-            elif MODE == MODE_ROUNDED_RECTANGLE:
-                radius = m * min((r - l), (b - t)) / 4
-                rounded_rectangle(draw, box, radius, quad.color)
-            else:
-                draw.rectangle(box, quad.color)
-            
-            # Save each frame into the "frames" folder
-            frame_path = f"{frames_folder}/out{i:03d}.png"
-            im.save(frame_path, 'PNG')
-        
-        del draw
-        im.save(path, 'PNG')
 
 
 def main():
