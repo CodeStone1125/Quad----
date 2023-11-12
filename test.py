@@ -16,9 +16,6 @@ sys.path.append(build_path)
 import example
 print(example.add())
 
-import model
-print(model.add())
-
 import quad
 print(quad.add())
 
