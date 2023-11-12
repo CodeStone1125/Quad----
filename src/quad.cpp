@@ -108,55 +108,63 @@ cv::Mat cropImage(const cv::Mat& originalImage, const std::tuple<int, int, int, 
     return originalImage(roi).clone();
 }
 
- /* 
-class Model {
-public:
-    cv::Mat im;
-    int width;
-    int height;
-    std::vector<std::tuple<int, double, Quad*>> heap;
-    Quad* root;
-    double error_sum;
-
-    Model(const std::string& path);
-    std::vector<Quad*> quads();
-    double average_error();
-    void push(Quad* quad);
-    Quad* pop();
-    void split();
-};
-*/
 //Implementation of Model
+Model::Model(const std::string& path) {
+    im = cv::imread(path);
 
-// Constructor of Model
-Model(const std::string& path) {
-    // Load image from path
-    im = cv::imread(imagePath);
-    if (image.empty()) {
-        throw std::runtime_error("Error: Unable to read the image from " + imagePath);
+    if (im.empty()) {
+        throw std::runtime_error("Error: Unable to read the image from " + path);
     }
-    // Covert from image to RGB
     cv::cvtColor(im, im, cv::COLOR_BGR2RGB);
-
-    // Get the image size
-    int width = im.cols;
-    int height = im.rows;
-
-    // Create empty heap
+    width = im.cols;
+    height = im.rows;
     std::vector<int> heap;
-
-    // Not covert to cpp part
-    // Self.root = Quad(self, (0, 0, self.width, self.height), 0)
-    // root = Quad(0, 0, width, height);
-    // self.error_sum = self.root.error * self.root.area
-    // self.push(self.root)
+    root = Quad(*this, std::make_tuple(0, 0, width, height), 0);
+    error_sum = root.m_error * root.m_area;
+    push(root);
 }
 
-//Implement of Quad
-Quad::Quad(Model model, std::tuple<int, int, int, int> box, int depth) {
-    m_model = model;
-    m_box = box;
-    m_depth = depth;
+const std::vector<Quad>& Model::getQuads() const {
+    return heap;
+}
+
+double Model::averageError() const {
+    return error_sum / (width * height);
+}
+
+void Model::push(Quad quad) {
+    double score = -quad.m_error * std::pow(quad.m_area, AREA_POWER);
+    heap.push_back(quad);
+    std::push_heap(heap.begin(), heap.end(), [](const auto& a, const auto& b) {
+        return a.m_error > b.m_error;
+    });
+}
+
+Quad Model::pop() {
+    std::pop_heap(heap.begin(), heap.end(), [](const auto& a, const auto& b) {
+        return a.m_error > b.m_error;
+    });
+
+    Quad quad = heap.back();
+    heap.pop_back();
+
+    return quad;
+}
+
+void Model::split() {
+    Quad quad = pop();
+    error_sum -= quad.m_error * quad.m_area;
+
+    std::vector<Quad> children = quad.split();
+    for (const auto& child : children) {
+        push(child);
+        error_sum += child.m_error * child.m_area;
+    }
+}
+
+// Implement of Quad
+Quad::Quad(Model& model, std::tuple<int, int, int, int> box, int depth)
+    : m_model(model), m_box(box), m_depth(depth), m_leaf(false), m_area(0.0) {
     hist = calculate_histogram_cv(cropImage(m_model.im, m_box));
     std::tie(m_color, m_error) = color_from_histogram(hist);
     m_leaf = is_leaf();
@@ -206,4 +214,3 @@ std::vector<Quad> Quad::get_leaf_nodes(int max_depth) {
 
     return result;
 }
-
