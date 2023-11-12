@@ -169,17 +169,17 @@ Quad::Quad(Model& model, std::tuple<int, int, int, int> box, int depth){
     children = {};
 }
 
-// bool Quad::is_leaf() {
-//     int l, t, r, b;
-//     std::tie(l, t, r, b) = m_box;
-//     return (r - l <= LEAF_SIZE || b - t <= LEAF_SIZE);
-// }
+bool Quad::is_leaf() {
+    int l, t, r, b;
+    std::tie(l, t, r, b) = m_box;
+    return (r - l <= LEAF_SIZE || b - t <= LEAF_SIZE);
+}
 
-// double Quad::compute_area() {
-//     int l, t, r, b;
-//     std::tie(l, t, r, b) = m_box;
-//     return static_cast<double>((r - l) * (b - t));
-// }
+double Quad::compute_area() {
+    int l, t, r, b;
+    std::tie(l, t, r, b) = m_box;
+    return static_cast<double>((r - l) * (b - t));
+}
 
 // std::vector<Quad> Quad::split() {
 //     int l, t, r, b;
