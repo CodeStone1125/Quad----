@@ -22,7 +22,6 @@ const double ERROR_RATE = 0.5;
 const double AREA_POWER = 0.25;
 const double OUTPUT_SCALE = 1.0;
 
-
 // Function to calculate weighted average
 std::tuple<double, double> weighted_average(const std::vector<double>& hist) {
     double total = 0.0;
@@ -45,7 +44,6 @@ std::tuple<double, double> weighted_average(const std::vector<double>& hist) {
     return std::make_tuple(value, error);
 }
 
-
 // Function to calculate color and luminance from histogram
 std::tuple<std::tuple<int, int, int>, double> color_from_histogram(const std::vector<double>& hist) {
     // Calculate weighted averages for each channel
@@ -62,10 +60,8 @@ std::tuple<std::tuple<int, int, int>, double> color_from_histogram(const std::ve
     double luminance = std::get<1>(red_average) * 0.2989 +
                        std::get<1>(green_average) * 0.5870 +
                        std::get<1>(blue_average) * 0.1140;
-
     return std::make_tuple(std::make_tuple(r, g, b), luminance);
 }
-
 
 // CPP version histogram()
 std::vector<int> calculate_histogram_cv(const cv::Mat& rgb_image) {
@@ -97,7 +93,6 @@ std::vector<int> calculate_histogram_cv(const cv::Mat& rgb_image) {
     return hist_cv_channels_int;
 }
 
-
 //Cpp version crop(image, box)
 cv::Mat cropImage(const cv::Mat& originalImage, const std::tuple<int, int, int, int>& box) {
     // Extract values from the tuple
@@ -111,126 +106,124 @@ cv::Mat cropImage(const cv::Mat& originalImage, const std::tuple<int, int, int, 
     return originalImage(roi).clone();
 }
 
-//Implementation of Model
+// // Implementation of Model
 Model::Model(const std::string& path) {
     im = cv::imread(path);
-
-    if (im.empty()) {
-        throw std::runtime_error("Error: Unable to read the image from " + path);
-    }
     cv::cvtColor(im, im, cv::COLOR_BGR2RGB);
     width = im.cols;
     height = im.rows;
-    std::vector<int> heap;
-    root = Quad(*this, std::make_tuple(0, 0, width, height), 0);
-    error_sum = root.m_error * root.m_area;
-    push(root);
+    std::vector<Quad> heap;
+    root = new Quad(*this, std::make_tuple(0, 0, width, height), 0);
+    error_sum = root -> m_error * root -> m_area;
+    push(*root);
 }
 
-const std::vector<Quad>& Model::getQuads() const {
-    return heap;
-}
+// const std::vector<Quad>& Model::getQuads() const {
+//     return heap;
+// }
 
-double Model::averageError() const {
-    return error_sum / (width * height);
-}
+// double Model::averageError() const {
+//     return error_sum / (width * height);
+// }
 
-void Model::push(Quad quad) {
-    double score = -quad.m_error * std::pow(quad.m_area, AREA_POWER);
-    heap.push_back(quad);
-    std::push_heap(heap.begin(), heap.end(), [](const auto& a, const auto& b) {
-        return a.m_error > b.m_error;
-    });
-}
+// void Model::push(Quad quad) {
+//     double score = -quad.m_error * std::pow(quad.m_area, AREA_POWER);
+//     heap.push_back(quad);
+//     std::push_heap(heap.begin(), heap.end(), [](const auto& a, const auto& b) {
+//         return a.m_error > b.m_error;
+//     });
+// }
 
-Quad Model::pop() {
-    std::pop_heap(heap.begin(), heap.end(), [](const auto& a, const auto& b) {
-        return a.m_error > b.m_error;
-    });
+// Quad Model::pop() {
+//     std::pop_heap(heap.begin(), heap.end(), [](const auto& a, const auto& b) {
+//         return a.m_error > b.m_error;
+//     });
 
-    Quad quad = heap.back();
-    heap.pop_back();
+//     Quad quad = heap.back();
+//     heap.pop_back();
 
-    return quad;
-}
+//     return quad;
+// }
 
-void Model::split() {
-    Quad quad = pop();
-    error_sum -= quad.m_error * quad.m_area;
+// void Model::split() {
+//     Quad quad = pop();
+//     error_sum -= quad.m_error * quad.m_area;
 
-    std::vector<Quad> children = quad.split();
-    for (const auto& child : children) {
-        push(child);
-        error_sum += child.m_error * child.m_area;
-    }
-}
+//     std::vector<Quad> children = quad.split();
+//     for (const auto& child : children) {
+//         push(child);
+//         error_sum += child.m_error * child.m_area;
+//     }
+// }
 
 // Implement of Quad
-Quad::Quad(Model& model, std::tuple<int, int, int, int> box, int depth)
-    : m_model(model), m_box(box), m_depth(depth), m_leaf(false), m_area(0.0) {
-    hist = calculate_histogram_cv(cropImage(m_model.im, m_box));
-    std::tie(m_color, m_error) = color_from_histogram(hist);
+Quad::Quad(Model& model, std::tuple<int, int, int, int> box, int depth){
+    m_model = &model;
+    m_box = box;
     m_leaf = is_leaf();
     m_area = compute_area();
+    hist = calculate_histogram_cv(cropImage(m_model -> im, m_box));
+    auto result = color_from_histogram(hist);
+    m_color = result;   // m_color std::tuple<int, int, int>
+    m_error = std::get<1>(result);  // m_error double
     children = {};
 }
 
-bool Quad::is_leaf() {
-    int l, t, r, b;
-    std::tie(l, t, r, b) = m_box;
-    return (r - l <= LEAF_SIZE || b - t <= LEAF_SIZE);
-}
+// bool Quad::is_leaf() {
+//     int l, t, r, b;
+//     std::tie(l, t, r, b) = m_box;
+//     return (r - l <= LEAF_SIZE || b - t <= LEAF_SIZE);
+// }
 
-double Quad::compute_area() {
-    int l, t, r, b;
-    std::tie(l, t, r, b) = m_box;
-    return static_cast<double>((r - l) * (b - t));
-}
+// double Quad::compute_area() {
+//     int l, t, r, b;
+//     std::tie(l, t, r, b) = m_box;
+//     return static_cast<double>((r - l) * (b - t));
+// }
 
-std::vector<Quad> Quad::split() {
-    int l, t, r, b;
-    std::tie(l, t, r, b) = m_box;
+// std::vector<Quad> Quad::split() {
+//     int l, t, r, b;
+//     std::tie(l, t, r, b) = m_box;
 
-    int lr = l + (r - l) / 2;
-    int tb = t + (b - t) / 2;
-    int depth = m_depth + 1;
+//     int lr = l + (r - l) / 2;
+//     int tb = t + (b - t) / 2;
+//     int depth = m_depth + 1;
 
-    Quad tl(m_model, std::make_tuple(l, t, lr, tb), depth);
-    Quad tr(m_model, std::make_tuple(lr, t, r, tb), depth);
-    Quad bl(m_model, std::make_tuple(l, tb, lr, b), depth);
-    Quad br(m_model, std::make_tuple(lr, tb, r, b), depth);
+//     Quad tl(m_model, std::make_tuple(l, t, lr, tb), depth);
+//     Quad tr(m_model, std::make_tuple(lr, t, r, tb), depth);
+//     Quad bl(m_model, std::make_tuple(l, tb, lr, b), depth);
+//     Quad br(m_model, std::make_tuple(lr, tb, r, b), depth);
 
-    children = { tl, tr, bl, br };
-    return children;
-}
+//     children = {tl, tr, bl, br};
+//     return children;
+// }
 
-std::vector<Quad> Quad::get_leaf_nodes(int max_depth) {
-    if (children.empty() || (max_depth != -1 && m_depth >= max_depth)) {
-        return { *this };
-    }
+// std::vector<Quad> Quad::get_leaf_nodes(int max_depth) {
+//     if (children.empty() || (max_depth != -1 && m_depth >= max_depth)) {
+//         return {*this};
+//     }
 
-    std::vector<Quad> result;
-    for (const auto& child : children) {
-        auto child_leaves = child.get_leaf_nodes(max_depth);
-        result.insert(result.end(), child_leaves.begin(), child_leaves.end());
-    }
+//     std::vector<Quad> result;
+//     for (const auto& child : children) {
+//         auto child_leaves = child.get_leaf_nodes(max_depth);
+//         result.insert(result.end(), child_leaves.begin(), child_leaves.end());
+//     }
 
-    return result;
-}
-
+//     return result;
+// }
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(your_module_name, m) {
+PYBIND11_MODULE(quad, m) {
     m.doc() = "Your module description";
 
-    py::class_<Model>(m, "Model")
-        .def(py::init<const std::string&>())
-        .def("getQuads", &Model::getQuads)
-        .def("averageError", &Model::averageError)
-        .def("push", &Model::push)
-        .def("pop", &Model::pop)
-        .def("split", &Model::split);
+    // py::class_<Model>(m, "Model")
+    //     .def(py::init<const std::string&>())
+    //     .def("getQuads", &Model::getQuads)
+    //     .def("averageError", &Model::averageError)
+    //     .def("push", &Model::push)
+    //     .def("pop", &Model::pop)
+    //     .def("split", &Model::split);
 
     py::class_<Quad>(m, "Quad")
         .def(py::init<Model&, std::tuple<int, int, int, int>, int>())
