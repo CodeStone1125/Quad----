@@ -1,27 +1,20 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
-#include <pybind11/stl.h>
 #include <opencv2/opencv.hpp>
 #include <iostream>
 
 namespace py = pybind11;
 
-std::vector<int> calculate_histogram_cv() {
-    std::string image_path = "/home/williechu1125/repo/QuadraCompress/assests/star.jpg";
-    cv::Mat im = cv::imread(image_path);
-
-    // Convert from BGR to RGB
-    cv::cvtColor(im, im, cv::COLOR_BGR2RGB);
-
+std::vector<int> calculate_histogram_cv(const cv::Mat& rgb_image) {
     // Split channels
     std::vector<cv::Mat> channels;
-    cv::split(im, channels);
+    cv::split(rgb_image, channels);
 
     // Initialize a vector to store histograms for each channel
     std::vector<int> hist_cv_channels;
 
     // Calculate histogram for each channel
-    for (int channel = 0; channel < im.channels(); ++channel) {
+    for (int channel = 0; channel < rgb_image.channels(); ++channel) {
         cv::Mat hist_channel;
         int histSize[] = {256};
         float range[] = {0, 256};

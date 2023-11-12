@@ -13,8 +13,11 @@ im = Image.open(image_path).convert('RGB')
 # Convert Pillow image to NumPy array
 np_image = np.array(im)
 
+# Convert NumPy array to cv::Mat
+cv_image = cv2.UMat(np_image)
+
 # Call the C++ function
-histogram_cpp = example.calculate_histogram_cv()
+histogram_cpp = example.calculate_histogram_cv(cv_image)
 
 def calculate_histogram_pillow(image_path):
     # Load image using Pillow

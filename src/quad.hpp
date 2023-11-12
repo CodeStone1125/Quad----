@@ -28,20 +28,32 @@ public:
 
 class Quad {
 public:
-    Quad(Model& model, const cv::Rect& box, int depth);
+    // Constructor
+    Quad(cv::Mat model, std::tuple<int, int, int, int> box, int depth);
 
+    // Destructor (if needed)
+
+    // Member functions
     bool is_leaf();
     double compute_area();
     std::vector<Quad> split();
     std::vector<Quad> get_leaf_nodes(int max_depth);
-    Model& m_model;
+
+// private... maybe... later...
+    // Helper functions
+    std::vector<int> calculate_histogram_cv(const cv::Mat& image);
+    std::tuple<int, int, int> color_from_histogram(const std::vector<int>& hist);
+    
+    // Member variables
+    cv::Mat m_model;
     std::tuple<int, int, int, int> m_box;
     int m_depth;
+    std::vector<int> hist;
+    std::tuple<int, int, int> m_color;
+    double m_error;
+    bool m_leaf;
+    double m_area;
     std::vector<Quad> children;
-    bool leaf;
-    cv::Mat hist;
-    // Helper functions
-    bool within_leaf_size();
 };
 
 #endif // MODEL_HPP
