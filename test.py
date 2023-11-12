@@ -1,34 +1,23 @@
-import cv2 
+import cv2
 import numpy as np
 from PIL import Image
 
-image_path = "/home/williechu1125/repo/QuadraCompress/assests/star.jpg"
+def calculate_histogram_cv(rgb_image):
+    # Convert the RGB image to a NumPy array
+    np_image = np.array(rgb_image)
 
-def calculate_histogram_cv(image_path):
-    # Load image using OpenCV
-    im = cv2.imread(image_path)
-
-    # Convert BGR to RGB
-    im_rgb = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
-
-    # Initialize an empty list to store histograms for each channel
+    # Initialize a list to store histograms for each channel
     hist_cv_channels = []
 
     # Calculate histogram for each channel
-    for channel in range(im_rgb.shape[2]):
-        hist_channel = cv2.calcHist([im_rgb], [channel], None, [256], [0, 256])
-        hist_cv_channels.append(hist_channel)
+    for channel in range(np_image.shape[2]):
+        hist_channel = cv2.calcHist([np_image], [channel], None, [256], [0, 256])
+        hist_cv_channels.extend(hist_channel.flatten())
 
-    # Concatenate the histograms for all channels
-    hist_cv = np.concatenate(hist_cv_channels)
+    # Cast the values to integers
+    hist_cv_channels = [int(value) for value in hist_cv_channels]
 
-    # Flatten the histogram values to 1D and cast to integers
-    hist_cv_flattened = np.ravel(hist_cv).astype(int)
-
-    # Get the image size (width and height)
-    height, width, _ = im.shape
-
-    return hist_cv_flattened, (width, height)  # Return the flattened histogram and image size
+    return hist_cv_channels
 
 def calculate_histogram_pillow(image_path):
     # Load image using Pillow
@@ -37,41 +26,19 @@ def calculate_histogram_pillow(image_path):
     # Calculate histogram using Pillow
     hist = im.histogram()
 
-    return hist, im.size  # Return the flattened histogram and image size
+    # Return the histogram as a list of integers
+    return [int(value) for value in hist]
 
+# Load image using Pillow
+image_path = "/home/williechu1125/repo/QuadraCompress/assests/star.jpg"
+im = Image.open(image_path).convert('RGB')
 
-def main():
-    # 讀取圖像
-    image_cv2 = cv2.imread(image_path)
+# Calculate histograms using both functions
+histogram_cv = calculate_histogram_cv(im)
+histogram_pillow = calculate_histogram_pillow(image_path)
 
-    # Get the width and height of the image
-    height, width, _ = image_cv2.shape
-
-    print("Image Width:", width)
-    print("Image Height:", height)
-
-    # 將圖像轉換為RGB模式
-    image_rgb_cv2 = cv2.cvtColor(image_cv2, cv2.COLOR_BGR2RGB)
-
-    # 計算OpenCV直方圖
-    hist_cv2, size_cv2 = calculate_histogram_cv(image_path)
-    hist_cv2_list = hist_cv2.tolist()  # Convert to regular Python list
-
-    # 使用Pillow計算直方圖
-    hist_pillow, size_pillow = calculate_histogram_pillow(image_path)
-
-    # 輸出兩者的直方圖和形狀信息
-    print("OpenCV 直方圖：", hist_cv2_list)
-    print("OpenCV 直方圖形狀：", size_cv2)
-    print("Pillow 直方圖：", hist_pillow)
-    print("Pillow 直方圖形狀：", size_pillow)
-
-    # 比較兩者直方圖是否相同
-    if np.array_equal(hist_cv2, hist_pillow) and size_cv2 == size_pillow:
-        print("兩者的直方圖相同")
-    else:
-        print("兩者的直方圖不同")
-
-if __name__ == "__main__":
-    main()
-
+# Compare histograms
+if histogram_cv == histogram_pillow:
+    print("Histograms are equal.")
+else:
+    print("Histograms are not equal.")
