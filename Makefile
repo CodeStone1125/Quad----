@@ -1,7 +1,7 @@
 CXX = g++
 CXXFLAGS = -O3 -Wall -shared -std=c++11 -fPIC
-TARGET = example
-SRC = example.cpp
+TARGET = quad
+SRC = quad.cpp
 
 BUILD_DIR := build
 SRC_DIR := src

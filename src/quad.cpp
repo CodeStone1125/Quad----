@@ -4,6 +4,9 @@
 #include <algorithm>
 #include <iostream>
 #include <opencv2/opencv.hpp>
+#include <pybind11/pybind11.h>
+#include <pybind11/numpy.h>
+#include <pybind11/stl.h>
 
 const int MODE_RECTANGLE = 1;
 const int MODE_ELLIPSE = 2;
@@ -213,4 +216,31 @@ std::vector<Quad> Quad::get_leaf_nodes(int max_depth) {
     }
 
     return result;
+}
+
+
+namespace py = pybind11;
+
+PYBIND11_MODULE(your_module_name, m) {
+    m.doc() = "Your module description";
+
+    py::class_<Model>(m, "Model")
+        .def(py::init<const std::string&>())
+        .def("getQuads", &Model::getQuads)
+        .def("averageError", &Model::averageError)
+        .def("push", &Model::push)
+        .def("pop", &Model::pop)
+        .def("split", &Model::split);
+
+    py::class_<Quad>(m, "Quad")
+        .def(py::init<Model&, std::tuple<int, int, int, int>, int>())
+        .def("is_leaf", &Quad::is_leaf)
+        .def("compute_area", &Quad::compute_area)
+        .def("split", &Quad::split)
+        .def("get_leaf_nodes", &Quad::get_leaf_nodes);
+
+    m.def("calculate_histogram_cv", &calculate_histogram_cv);
+    m.def("cropImage", &cropImage);
+    m.def("weighted_average", &weighted_average);
+    m.def("color_from_histogram", &color_from_histogram);
 }
