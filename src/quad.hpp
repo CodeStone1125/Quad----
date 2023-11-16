@@ -25,7 +25,7 @@ public:
 // private... maybe... later...
     // Member variables
     Model* m_model;  // Use a pointer to the Model class
-    std::tuple<int, int, int, int> m_box;s
+    std::tuple<int, int, int, int> m_box;
     bool m_leaf;
     std::vector<int> hist;
     int m_depth;
