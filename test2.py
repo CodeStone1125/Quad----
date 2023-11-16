@@ -1,7 +1,7 @@
 import sys
 sys.path.append('build')
 
-import example
+import quad
 import cv2
 from PIL import Image
 import numpy as np
