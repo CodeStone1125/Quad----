@@ -267,7 +267,38 @@ void cpp_callback1(bool i, std::string id, py::array_t<uint8_t>& img)
     cv::waitKey(0); // 等待用戶按下任意按鍵，以便保持顯示視窗
 }
 
+py::array_t<uint8_t> flipcvMat(py::array_t<uint8_t>& img)
+{
+    auto rows = static_cast<size_t>(img.shape(0));
+    auto cols = static_cast<size_t>(img.shape(1));
+    auto channels = static_cast<size_t>(img.shape(2));
+    std::cout << "rows: " << rows << " cols: " << cols << " channels: " << channels << std::endl;
 
+    auto type = CV_8UC3;
+
+    cv::Mat cvimg2(rows, cols, type, (unsigned char*)img.data());
+
+    // Use the full path or a path relative to the current working directory
+    cv::imwrite("assets/test.jpg", cvimg2);
+
+    cv::Mat cvimg3(rows, cols, type);
+    cv::flip(cvimg2, cvimg3, 0);
+
+    // Use the full path or a path relative to the current working directory
+    cv::imwrite("assets/testout.jpg", cvimg3);
+
+    py::array_t<uint8_t> output(
+        py::buffer_info(
+            cvimg3.data,
+            sizeof(uint8_t), // itemsize
+            py::format_descriptor<uint8_t>::format(),
+            3, // ndim
+            std::vector<size_t>{rows, cols, 3}, // shape
+            std::vector<size_t>{sizeof(uint8_t) * cols * 3, sizeof(uint8_t) * 3, sizeof(uint8_t)} // strides
+        )
+    );
+    return output;
+}
 
 
 PYBIND11_MODULE(quad, m) {
@@ -292,7 +323,7 @@ PYBIND11_MODULE(quad, m) {
     m.def("weighted_average", &weighted_average, "Calculate the weighted average.");
     m.def("calculate_histogram_cv", &calculate_histogram_cv, "Calculate the histogram of an image.");
     m.def("cropImage", &cropImage, "Crop an image based on a given box.");
+
     m.def("cpp_callback1", &cpp_callback1, "A callback function");
-    
-    
+    m.def("flipcvMat", &flipcvMat, "Flip the input image and return the result");
 }

@@ -10,5 +10,5 @@ sys.path.append('build')
 image_data_2 = np.random.randint(0, 256, size=(300, 400, 3), dtype=np.uint8)
 
 # 查看數據類型
-print(type(image_data))
+
 print(type(image_data_2))

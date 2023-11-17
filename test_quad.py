@@ -5,6 +5,7 @@ import numpy as np
 import sys
 sys.path.append('build')
 import quad  # Import your pybind11 module
+sys.path.pop()
 
 @pytest.fixture
 def sample_image():
