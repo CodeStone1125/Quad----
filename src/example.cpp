@@ -1,39 +1,51 @@
+#include "quad.hpp"
+#include <cmath>
+#include <numeric>
+#include <algorithm>
+#include <iostream>
+#include <string>
+#include <tuple>
+#include <opencv2/opencv.hpp>
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
-#include <opencv2/opencv.hpp>
-#include <iostream>
+#include <pybind11/stl.h>
 
 namespace py = pybind11;
 
-std::vector<int> calculate_histogram_cv(const cv::Mat& rgb_image) {
-    // Split channels
-    std::vector<cv::Mat> channels;
-    cv::split(rgb_image, channels);
+py::array_t<uint8_t> flipcvMat(py::array_t<uint8_t>& img)
+{
+    auto rows = static_cast<size_t>(img.shape(0));
+    auto cols = static_cast<size_t>(img.shape(1));
+    auto channels = static_cast<size_t>(img.shape(2));
+    std::cout << "rows: " << rows << " cols: " << cols << " channels: " << channels << std::endl;
 
-    // Initialize a vector to store histograms for each channel
-    std::vector<int> hist_cv_channels;
+    auto type = CV_8UC3;
 
-    // Calculate histogram for each channel
-    for (int channel = 0; channel < rgb_image.channels(); ++channel) {
-        cv::Mat hist_channel;
-        int histSize[] = {256};
-        float range[] = {0, 256};
-        const float* histRange[] = {range};
-        cv::calcHist(&channels[channel], 1, nullptr, cv::Mat(), hist_channel, 1, histSize, histRange, true, false);
+    cv::Mat cvimg2(rows, cols, type, (unsigned char*)img.data());
 
-        // Extend the vector with the histogram values
-        hist_cv_channels.insert(hist_cv_channels.end(), hist_channel.begin<float>(), hist_channel.end<float>());
-    }
+    // Use the full path or a path relative to the current working directory
+    cv::imwrite("assets/test.jpg", cvimg2);
 
-    // Cast the values to integers
-    std::vector<int> hist_cv_channels_int;
-    for (float value : hist_cv_channels) {
-        hist_cv_channels_int.push_back(static_cast<int>(value));
-    }
+    cv::Mat cvimg3(rows, cols, type);
+    cv::flip(cvimg2, cvimg3, 0);
 
-    return hist_cv_channels_int;
+    // Use the full path or a path relative to the current working directory
+    cv::imwrite("assets/testout.jpg", cvimg3);
+
+    py::array_t<uint8_t> output(
+        py::buffer_info(
+            cvimg3.data,
+            sizeof(uint8_t), // itemsize
+            py::format_descriptor<uint8_t>::format(),
+            3, // ndim
+            std::vector<size_t>{rows, cols, 3}, // shape
+            std::vector<size_t>{sizeof(uint8_t) * cols * 3, sizeof(uint8_t) * 3, sizeof(uint8_t)} // strides
+        )
+    );
+    return output;
 }
 
+
 PYBIND11_MODULE(example, m) {
-    m.def("calculate_histogram_cv", &calculate_histogram_cv, "Calculate histogram for an RGB image");
+    m.def("flipcvMat", &flipcvMat, "Calculate histogram for an RGB image");
 }

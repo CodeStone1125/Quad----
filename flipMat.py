@@ -9,7 +9,7 @@ import quad
 
 # 讀取圖片
 image_data = cv2.imread('assets/star.jpg')
-img3 = quad.flipcvMat(image_data)
+img3 = quad.cropImage_test(image_data,(50, 300, 100, 100))
 
 # 顯示圖片
 cv2.imshow('Flipped Image', img3)

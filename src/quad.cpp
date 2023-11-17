@@ -267,7 +267,7 @@ void cpp_callback1(bool i, std::string id, py::array_t<uint8_t>& img)
     cv::waitKey(0); // 等待用戶按下任意按鍵，以便保持顯示視窗
 }
 
-py::array_t<uint8_t> flipcvMat(py::array_t<uint8_t>& img)
+py::array_t<uint8_t> cropImage_test(py::array_t<uint8_t>& img, const std::tuple<int, int, int, int> box)
 {
     auto rows = static_cast<size_t>(img.shape(0));
     auto cols = static_cast<size_t>(img.shape(1));
@@ -278,23 +278,32 @@ py::array_t<uint8_t> flipcvMat(py::array_t<uint8_t>& img)
 
     cv::Mat cvimg2(rows, cols, type, (unsigned char*)img.data());
 
-    // Use the full path or a path relative to the current working directory
-    cv::imwrite("assets/test.jpg", cvimg2);
+    // Extract values from the tuple
+    int x, y, width, height;
+    std::tie(x, y, width, height) = box;
+    cv::Rect roi(x, y, width, height);
 
-    cv::Mat cvimg3(rows, cols, type);
-    cv::flip(cvimg2, cvimg3, 0);
+    // Use the full path or a path relative to the current working directory
+    // cv::imwrite("assets/test.jpg", cvimg2);
+    cvimg2 = cvimg2(roi).clone();
+    // cv::Mat cvimg3(rows, cols, type);
+    // cv::flip(cvimg2, cvimg3, 0);
 
     // Use the full path or a path relative to the current working directory
-    cv::imwrite("assets/testout.jpg", cvimg3);
+    // cv::imwrite("assets/testout.jpg", cvimg3);
+
+    // Calculate the new size based on the ROI
+    size_t newRows = static_cast<size_t>(roi.height);
+    size_t newCols = static_cast<size_t>(roi.width);
 
     py::array_t<uint8_t> output(
         py::buffer_info(
-            cvimg3.data,
+            cvimg2.data,
             sizeof(uint8_t), // itemsize
             py::format_descriptor<uint8_t>::format(),
             3, // ndim
-            std::vector<size_t>{rows, cols, 3}, // shape
-            std::vector<size_t>{sizeof(uint8_t) * cols * 3, sizeof(uint8_t) * 3, sizeof(uint8_t)} // strides
+            std::vector<size_t>{newRows, newCols, 3}, // shape
+            std::vector<size_t>{sizeof(uint8_t) * newCols * 3, sizeof(uint8_t) * 3, sizeof(uint8_t)} // strides
         )
     );
     return output;
@@ -325,5 +334,5 @@ PYBIND11_MODULE(quad, m) {
     m.def("cropImage", &cropImage, "Crop an image based on a given box.");
 
     m.def("cpp_callback1", &cpp_callback1, "A callback function");
-    m.def("flipcvMat", &flipcvMat, "Flip the input image and return the result");
+    m.def("cropImage_test", &cropImage_test, "crop the input image and return the result");
 }
