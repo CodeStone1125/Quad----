@@ -47,7 +47,7 @@ struct CompareQuad {
 class Model {
 public:
     Model(const std::string& path);
-    const std::vector<Quad>& getQuads() const;
+    Quad getQuads() const;
     double averageError() const;
     void push(Quad& quad);
     Quad pop();

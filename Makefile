@@ -27,6 +27,9 @@ $(BUILD_DIR):
 clean:
 	rm -rf $(BUILD_DIR)
 
+try:
+	./run.sh
+
 test: $(BUILD_DIR)/$(TARGET)
 	python3 -m pytest test_quad.py
 

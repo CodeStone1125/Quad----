@@ -109,26 +109,69 @@ cv::Mat cropImage(const cv::Mat& originalImage, const std::tuple<int, int, int, 
     return originalImage(roi).clone();
 }
 
+// cv::Mat cropImage(py::array_t<uint8_t>& img, const std::tuple<int, int, int, int> box)
+// {
+//     auto rows = static_cast<size_t>(img.shape(0));
+//     auto cols = static_cast<size_t>(img.shape(1));
+//     auto channels = static_cast<size_t>(img.shape(2));
+//     std::cout << "rows: " << rows << " cols: " << cols << " channels: " << channels << std::endl;
+//     auto type = CV_8UC3;
+
+//     cv::Mat cvimg2(rows, cols, type, (unsigned char*)img.data());
+
+//     // Extract values from the tuple
+//     int x, y, width, height;
+//     std::tie(x, y, width, height) = box;
+
+//     cv::Rect roi(x, y, width, height);
+//     cvimg2 = cvimg2(roi).clone();
+
+//     // Display the extracted region in a window named "ROI"
+//     cv::imshow("ROI", cvimg2);
+//     cv::waitKey(0);  // Wait for a key press to close the window
+
+//     // Calculate the new size based on the ROI
+//     size_t newRows = static_cast<size_t>(roi.height);
+//     size_t newCols = static_cast<size_t>(roi.width);
+
+//     py::array_t<uint8_t> output(
+//         py::buffer_info(
+//             cvimg2.data,
+//             sizeof(uint8_t), // itemsize
+//             py::format_descriptor<uint8_t>::format(),
+//             3, // ndim
+//             std::vector<size_t>{newRows, newCols, 3}, // shape
+//             std::vector<size_t>{sizeof(uint8_t) * newCols * 3, sizeof(uint8_t) * 3, sizeof(uint8_t)} // strides
+//         )
+//     );
+//     return output;
+// }
 
 
 /* Implementation of Model */ 
 Model::Model(const std::string& path)
-    : im(cv::imread(path)),
-      width(im.cols),
-      height(im.rows),
-      heap(),
-      root(new Quad(*this, std::make_tuple(0, 0, width, height), 0)),
-      error_sum(root->m_error * root->m_area) {
+                            : im(cv::imread(path)),
+                            width(im.cols),
+                            height(im.rows),
+                            heap(),
+                            root(new Quad(*this, std::make_tuple(0, 0, width, height), 0)),
+                            error_sum(root->m_error * root->m_area) 
+{ 
+    
     cv::cvtColor(im, im, cv::COLOR_BGR2RGB);
     push(*root);
 }
 
 
 
-const std::vector<Quad>& Model::getQuads() const {
-        // Convert the priority_queue to a vector
-        quads_vector = convertPriorityQueueToVector(heap);
-        return quads_vector;
+Quad Model::getQuads() const {
+    // 將優先級隊列轉換為向量
+    std::vector<Quad> quads_vector = convertPriorityQueueToVector(heap);
+    
+    // 使用 back() 方法取得最後一個元素
+    Quad lastElement = quads_vector.back();
+
+    return lastElement;
 }
 
 double Model::averageError() const {
@@ -273,7 +316,6 @@ py::array_t<uint8_t> cropImage_test(py::array_t<uint8_t>& img, const std::tuple<
     auto cols = static_cast<size_t>(img.shape(1));
     auto channels = static_cast<size_t>(img.shape(2));
     std::cout << "rows: " << rows << " cols: " << cols << " channels: " << channels << std::endl;
-
     auto type = CV_8UC3;
 
     cv::Mat cvimg2(rows, cols, type, (unsigned char*)img.data());
@@ -281,16 +323,13 @@ py::array_t<uint8_t> cropImage_test(py::array_t<uint8_t>& img, const std::tuple<
     // Extract values from the tuple
     int x, y, width, height;
     std::tie(x, y, width, height) = box;
+
     cv::Rect roi(x, y, width, height);
-
-    // Use the full path or a path relative to the current working directory
-    // cv::imwrite("assets/test.jpg", cvimg2);
     cvimg2 = cvimg2(roi).clone();
-    // cv::Mat cvimg3(rows, cols, type);
-    // cv::flip(cvimg2, cvimg3, 0);
 
-    // Use the full path or a path relative to the current working directory
-    // cv::imwrite("assets/testout.jpg", cvimg3);
+    // Display the extracted region in a window named "ROI"
+    cv::imshow("ROI", cvimg2);
+    cv::waitKey(0);  // Wait for a key press to close the window
 
     // Calculate the new size based on the ROI
     size_t newRows = static_cast<size_t>(roi.height);
