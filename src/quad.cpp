@@ -10,6 +10,8 @@
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
 
+namespace py = pybind11;
+
 const int MODE_RECTANGLE = 1;
 const int MODE_ELLIPSE = 2;
 const int MODE_ROUNDED_RECTANGLE = 3;
@@ -254,7 +256,19 @@ std::vector<Quad> Quad::get_leaf_nodes(int max_depth) const {
     return leaves;
 }
 
-namespace py = pybind11;
+void cpp_callback1(bool i, std::string id, py::array_t<uint8_t>& img)
+{ 
+    //auto im = img.unchecked<3>();
+    auto rows = img.shape(0);
+    auto cols = img.shape(1);
+    auto type = CV_8UC3;
+    cv::Mat img2(rows, cols, type, (unsigned char*)img.data());
+    cv::imshow(id, img2);
+    cv::waitKey(0); // 等待用戶按下任意按鍵，以便保持顯示視窗
+}
+
+
+
 
 PYBIND11_MODULE(quad, m) {
     m.doc() = "Quad image compressor";
@@ -278,6 +292,7 @@ PYBIND11_MODULE(quad, m) {
     m.def("weighted_average", &weighted_average, "Calculate the weighted average.");
     m.def("calculate_histogram_cv", &calculate_histogram_cv, "Calculate the histogram of an image.");
     m.def("cropImage", &cropImage, "Crop an image based on a given box.");
+    m.def("cpp_callback1", &cpp_callback1, "A callback function");
     
     
 }
