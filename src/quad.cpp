@@ -95,7 +95,7 @@ extern "C" std::tuple<std::tuple<int, int, int>, double> color_from_histogram(co
 }
 
 //Cpp version crop(image, box)
-extern "C" cv::Mat cropImage(const cv::Mat& originalImage, const std::tuple<int, int, int, int>& box) {
+cv::Mat cropImage(const cv::Mat& originalImage, const std::tuple<int, int, int, int> box) {
     // Extract values from the tuple
     int x, y, width, height;
     std::tie(x, y, width, height) = box;
@@ -106,6 +106,8 @@ extern "C" cv::Mat cropImage(const cv::Mat& originalImage, const std::tuple<int,
     // Crop the image using the defined ROI
     return originalImage(roi).clone();
 }
+
+
 
 /* Implementation of Model */ 
 Model::Model(const std::string& path)
