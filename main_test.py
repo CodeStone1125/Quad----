@@ -131,9 +131,14 @@ def main():
                 model.render('frames/%06d.png' % i)
             previous = error
         model.split()
-    model.render('output.png')
+    model.render('output.png', 0)  # 假設 max_depth 為 0
     print('-' * 32)
-    depth = Counter(x.depth for x in model.quads)
+    heap = model.getQuads()
+    print(heap)
+    model_quads = [x[-1] for x in heap]
+    print(model_quads)
+    depth = Counter(x.depth for x in model_quads)
+    print(depth)
     for key in sorted(depth):
         value = depth[key]
         n = 4 ** key
@@ -141,8 +146,9 @@ def main():
         print('%3d %8d %8d %8.2f%%' % (key, n, value, pct))
     print('-' * 32)
     print('             %8d %8.2f%%' % (len(model.getQuads()), 100))
-    for max_depth in range(max(depth.keys()) + 1):
+    for max_depth in range(max(depth) + 1):
         model.render('out%d.png' % max_depth, max_depth)
+
 
 
 

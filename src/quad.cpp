@@ -164,15 +164,20 @@ Model::Model(const std::string& path)
 
 
 
-Quad Model::getQuads() const {
+std::vector<Quad> Model::getQuads() const {
     // 將優先級隊列轉換為向量
     std::vector<Quad> quads_vector = convertPriorityQueueToVector(heap);
     
-    // 使用 back() 方法取得最後一個元素
-    Quad lastElement = quads_vector.back();
+    // 取得每個元素的最後一個元素
+    std::vector<Quad> result;
+    int n = quad.size();
+    for (const auto& quad_itr : quads_vector) {
+        result.push_back(quad_itr.getLastElement());
+    }
 
-    return lastElement;
+    return quads_vector;
 }
+
 
 double Model::averageError() const {
     return error_sum / (width * height);
@@ -349,9 +354,12 @@ py::array_t<uint8_t> cropImage_test(py::array_t<uint8_t>& img, const std::tuple<
     return output;
 }
 
-// void Model::render(const std::string& filename, int max_depth) {
-
-// }
+void Model::render(const std::string& filename, int max_depth) {
+    // Assuming im is a cv::Mat
+    std::string output_filename = "assets/out" + std::to_string(max_depth) + ".png";
+    cv::imwrite(output_filename, im);
+    return;
+}
 
 PYBIND11_MODULE(quad, m) {
     m.doc() = "Quad image compressor";
@@ -362,7 +370,8 @@ PYBIND11_MODULE(quad, m) {
         .def("averageError", &Model::averageError, "Calculate the average error of the model.")
         .def("push", &Model::push, "Push a quad into the model.")
         .def("pop", &Model::pop, "Pop a quad from the model.")
-        .def("split", &Model::split, "Split the model into quads.");
+        .def("split", &Model::split, "Split the model into quads.")
+        .def("render", &Model::render, "Render image");
 
     py::class_<Quad>(m, "Quad")
         .def(py::init<Model&, std::tuple<int, int, int, int>, int>(), "Constructor for the Quad class.")

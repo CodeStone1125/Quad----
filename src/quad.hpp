@@ -34,6 +34,11 @@ public:
     
     double m_area;
     std::vector<Quad> children;
+
+    // Quad Quad::getLastElement() const {
+
+    // return /* 最後一個元素 */;
+    // }
 };
 
 // For std::priority_queue compare fountion
@@ -47,7 +52,7 @@ struct CompareQuad {
 class Model {
 public:
     Model(const std::string& path);
-    Quad getQuads() const;
+    std::vector<Quad> getQuads() const;
     double averageError() const;
     void push(Quad& quad);
     Quad pop();
