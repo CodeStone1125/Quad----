@@ -52,7 +52,7 @@ public:
     void push(Quad& quad);
     Quad pop();
     void split();
-
+    void render(const std::string& filename, int max_depth);
 // private... maybe... later...
     cv::Mat im;
     int width;

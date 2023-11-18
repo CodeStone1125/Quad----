@@ -260,26 +260,27 @@ bool Quad::is_leaf() const{
 }
 
 double Quad::compute_area() {
-    int l, t, r, b;
-    std::tie(l, t, r, b) = m_box;
-    return static_cast<double>((r - l) * (b - t));
+    int x, y, width, height;    //(x, y) is left-up
+    std::tie(x, y, width, height) = m_box;
+    return static_cast<double>(width * height);
 }
 
 std::vector<Quad> Quad::split() {
-    float l, t, r, b;
-    std::tie(l, t, r, b) = m_box;  // 使用 m_box
-
-    float lr = l + (r - l) / 2;
-    float tb = t + (b - t) / 2;
+    int x, y, width, height;    //(x, y) is left-up
+    std::tie(x, y, width, height) = m_box;  // 使用 m_box
+    int newWidth = width / 2;
+    int newHeight = height / 2;
+    int x_mid = x + newWidth;
+    int y_mid = y + newHeight;
     int depth = m_depth + 1;  // 使用 m_depth
 
-    Quad tl(*m_model, std::make_tuple(l, t, lr, tb), depth);  // 使用 m_model
-    Quad tr(*m_model, std::make_tuple(lr, t, r, tb), depth);  // 使用 m_model
-    Quad bl(*m_model, std::make_tuple(l, tb, lr, b), depth);  // 使用 m_model
-    Quad br(*m_model, std::make_tuple(lr, tb, r, b), depth);  // 使用 m_model
+    Quad l_up(*m_model, std::make_tuple(x, y, newWidth, newHeight), depth);  // 使用 m_model
+    Quad l_down(*m_model, std::make_tuple(x, y_mid, newWidth, newHeight), depth);  // 使用 m_model
+    Quad r_up(*m_model, std::make_tuple(x_mid, y, newWidth, newHeight), depth);  // 使用 m_model
+    Quad r_down(*m_model, std::make_tuple(x_mid, y_mid, newWidth, newHeight), depth);  // 使用 m_model
 
     // 使用 std::vector 返回新創建的 Quad 對象
-    return {tl, tr, bl, br};
+    return {l_up, l_down, r_up, r_down};
 }
 
 std::vector<Quad> Quad::get_leaf_nodes(int max_depth) const {
@@ -348,6 +349,9 @@ py::array_t<uint8_t> cropImage_test(py::array_t<uint8_t>& img, const std::tuple<
     return output;
 }
 
+// void Model::render(const std::string& filename, int max_depth) {
+
+// }
 
 PYBIND11_MODULE(quad, m) {
     m.doc() = "Quad image compressor";
