@@ -9,6 +9,9 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
+#include <vector>
+#include <cstdint>
+
 
 namespace py = pybind11;
 
@@ -50,9 +53,9 @@ extern "C" std::tuple<double, double> weighted_average(const std::vector<double>
 // Function to calculate color and luminance from histogram
 extern "C" std::tuple<std::tuple<uint8_t, uint8_t, uint8_t>, double> color_from_histogram(const std::vector<int>& hist) {
     // Calculate weighted averages for each channel
-    auto red_average = weighted_average(std::vector<double>(hist.begin(), hist.begin() + 256));
+    auto red_average = weighted_average(std::vector<double>(hist.begin() + 512, hist.end()));
     auto green_average = weighted_average(std::vector<double>(hist.begin() + 256, hist.begin() + 512));
-    auto blue_average = weighted_average(std::vector<double>(hist.begin() + 512, hist.end()));
+    auto blue_average = weighted_average(std::vector<double>(hist.begin(), hist.begin() + 256));
 
     // Convert float values to integers by rounding
     int r = static_cast<uint8_t>(std::round(std::get<0>(red_average)));
@@ -122,7 +125,7 @@ Model::Model(const std::string& path)
                             root(new Quad(*this, std::make_tuple(0, 0, width, height), 0)),
                             error_sum(root->m_error * root->m_area) 
 { 
-    cv::cvtColor(im, im, cv::COLOR_BGR2RGB);
+    // cv::cvtColor(im, im, cv::COLOR_BGR2RGB);
     push(*root);
 }
 
@@ -193,11 +196,43 @@ Quad Model::pop() {
     return quad;
 }
 
-void Model::render(const std::string& filename) {
-    // Assuming im is a cv::Mat
-    cv::imwrite(filename, im);
-    return;
-}
+
+// void Model::render(const std::string& path, int max_depth) const {
+//     const int m = OUTPUT_SCALE;
+//     const int dx = PADDING;
+//     const int dy = PADDING;
+
+//     cv::Mat im(cv::Size(width * m + dx, height * m + dy), CV_8UC3, FILL_COLOR);
+    
+//     // // Create a frames folder if not exists
+//     const std::string frames_folder = "frames";
+//     // cv::utils::fs::createDirectory(frames_folder);
+
+//     int i = 0;
+//     for (const auto& quad : root -> get_leaf_nodes(max_depth)) {
+//         int x, y, width, height;
+//         std::tie(x, y, width, height) = quad.m_box;
+
+//         cv::Rect roi(x * m + dx,(y + height) * m + dy, (x + width) * m - 1, y * m - 1);
+
+//         if (MODE == MODE_ELLIPSE) {
+//             cv::ellipse(im, cv::Point((roi.x + roi.width) / 2, (roi.y + roi.height) / 2), cv::Size(roi.width / 2, roi.height / 2), 0, 0, 360, quad.m_color, -1);
+//         }
+//         // else if (MODE == MODE_ROUNDED_RECTANGLE) {
+//         //     const double radius = m * std::min(width, height) / 4;
+//         //     cv::rectangle(im, roi, quad.getColor(), cv::FILLED, cv::LINE_8, 0);
+//         // } else {
+//         //     cv::rectangle(im, roi, quad.getColor(), cv::FILLED, cv::LINE_8, 0);
+//         // }
+
+//         // Save each frame into the "frames" folder
+//         const std::string frame_path = frames_folder + "/out" + std::to_string(i) + ".png";
+//         cv::imwrite(frame_path, im);
+//         ++i;
+//     }
+
+//     cv::imwrite(path, im);
+// }
 
 void Model::split() {
     Quad quad = pop();
@@ -225,6 +260,9 @@ Quad::Quad(Model& model, std::tuple<int, int, int, int> box, int depth)
 bool Quad::is_leaf() const{
     int x, y, width, height;
     std::tie(x, y, width, height) = m_box;
+    if((width  <= LEAF_SIZE || height <= LEAF_SIZE)){
+        printf("leaf");
+    }
     return (width  <= LEAF_SIZE || height <= LEAF_SIZE); //width and height
 }
 
@@ -252,22 +290,22 @@ std::vector<Quad> Quad::split() {
     return {l_up, r_up, l_down, r_down};
 }
 
-// std::vector<Quad> Quad::get_leaf_nodes(int max_depth) const {
-//     std::vector<Quad> leaves;
+std::vector<Quad> Quad::get_leaf_nodes(int max_depth) const {
+    std::vector<Quad> leaves;
 
-//     // 使用 is_leaf_node() 和 m_depth 來確定是否是葉子節點
-//     if (is_leaf() || m_depth >= max_depth) {
-//         leaves.push_back(*this);  // 如果是葉子節點，將當前節點加入結果中
-//     } else {
-//         // 遞迴調用 get_leaf_nodes
-//         for (const auto& child : children) {
-//             auto child_leaves = child.get_leaf_nodes(max_depth);
-//             leaves.insert(leaves.end(), child_leaves.begin(), child_leaves.end());
-//         }
-//     }
+    // 使用 is_leaf_node() 和 m_depth 來確定是否是葉子節點
+    if (is_leaf() || m_depth >= max_depth) {
+        leaves.push_back(*this);  // 如果是葉子節點，將當前節點加入結果中
+    } else {
+        // 遞迴調用 get_leaf_nodes
+        for (const auto& child : children) {
+            auto child_leaves = child.get_leaf_nodes(max_depth);
+            leaves.insert(leaves.end(), child_leaves.begin(), child_leaves.end());
+        }
+    }
 
-//     return leaves;
-// }
+    return leaves;
+}
 
 // void cpp_callback1(bool i, std::string id, py::array_t<uint8_t>& img)
 // { 
@@ -328,14 +366,16 @@ PYBIND11_MODULE(quad, m) {
         .def("push", &Model::push, "Push a quad into the model.")
         .def("pop", &Model::pop, "Pop a quad from the model.")
         .def("split", &Model::split, "Split the model into quads.")
-        .def("render", &Model::render, "Render image");
+        .def_property_readonly("width", &Model::getWidth)
+        .def_property_readonly("height", &Model::getHeight)
+        .def_property_readonly("root", &Model::getRoot);  // 添加 root 的 getter
 
     py::class_<Quad>(m, "Quad")
         .def(py::init<Model&, std::tuple<int, int, int, int>, int>(), "Constructor for the Quad class.")
         .def("is_leaf", &Quad::is_leaf, "Check if the quad is a leaf.")
         .def("compute_area", &Quad::compute_area, "Compute the area of the quad.")
         .def("split", &Quad::split, "Split the quad into child quads.")
-        // .def("get_leaf_nodes", &Quad::get_leaf_nodes, "Get the leaf nodes of the quad.")
+        .def("get_leaf_nodes", &Quad::get_leaf_nodes, "Get the leaf nodes of the quad.")
         .def_property("m_depth", &Quad::getDepth, &Quad::setDepth);
 
     m.def("color_from_histogram", &color_from_histogram, "Calculate color and luminance from histogram.");

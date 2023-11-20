@@ -72,7 +72,7 @@ public:
     void push(Quad& quad);
     Quad pop();
     void split();
-    void render(const std::string& filename);
+    // void render(const std::string& path, int max_depth) const;
 // private... maybe... later...
     cv::Mat im;
     int width;
@@ -82,6 +82,12 @@ public:
     Quad* root;  // Use a pointer to the Quad class
     double error_sum;
 
+    // Define properties for width and height
+    int getWidth() const { return width; }
+    int getHeight() const { return height; }
+    Quad* getRoot() const {
+        return root;
+    }
     // Helper function to convert priority_queue to vector
     std::vector<Quad> convertPriorityQueueToVector(const std::priority_queue<std::tuple<int, double, Quad>, std::vector<std::tuple<int, double, Quad>>, CompareQuad>& pq) const {
         std::vector<Quad> vec;
