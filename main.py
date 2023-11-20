@@ -22,6 +22,8 @@ def weighted_average(hist):
     value = sum(i * x for i, x in enumerate(hist)) / total
     error = sum(x * (value - i) ** 2 for i, x in enumerate(hist)) / total
     error = error ** 0.5
+    # errorMessage = "error: " + str(error)
+    # print(errorMessage)
     return value, error
 
 def color_from_histogram(hist):
@@ -73,15 +75,15 @@ class Quad(object):
         br = Quad(self.model, (lr, tb, r, b), depth)
         self.children = (tl, tr, bl, br)
         return self.children
-    def get_leaf_nodes(self, max_depth=None):
-        if not self.children:
-            return [self]
-        if max_depth is not None and self.depth >= max_depth:
-            return [self]
-        result = []
-        for child in self.children:
-            result.extend(child.get_leaf_nodes(max_depth))
-        return result
+    # def get_leaf_nodes(self, max_depth=None):
+    #     if not self.children:
+    #         return [self]
+    #     if max_depth is not None and self.depth >= max_depth:
+    #         return [self]
+    #     result = []
+    #     for child in self.children:
+    #         result.extend(child.get_leaf_nodes(max_depth))
+    #     return result
 
 class Model(object):
     def __init__(self, path):
@@ -136,7 +138,7 @@ def main():
     print('-' * 32)
     print('             %8d %8.2f%%' % (len(model.quads), 100))
     for max_depth in range(max(depth.keys()) + 1):
-        model.render('out%d.png' % max_depth, max_depth)
+        model.render('exout%d.png' % max_depth, max_depth)
 
 
 

@@ -35,10 +35,25 @@ public:
     double m_area;
     std::vector<Quad> children;
 
-    // Quad Quad::getLastElement() const {
+    // getLastElement method for Quad
+    Quad getLastElement() const {
+        if (!children.empty()) {
+            return children.back();
+        } 
+        else {
+            // 如果 children 向量為空，返回帶有默認值的 Quad 對象
+            return Quad(*m_model, std::make_tuple(0, 0, 100, 100), m_depth);
+        }
+    }
 
-    // return /* 最後一個元素 */;
-    // }
+    // Getter and setter for m_depth
+    int getDepth() const {
+        return m_depth;
+    }
+
+    void setDepth(int depth) {
+        m_depth = depth;
+    }
 };
 
 // For std::priority_queue compare fountion
@@ -57,7 +72,7 @@ public:
     void push(Quad& quad);
     Quad pop();
     void split();
-    void render(const std::string& filename, int max_depth);
+    void render(const std::string& filename);
 // private... maybe... later...
     cv::Mat im;
     int width;
