@@ -122,7 +122,6 @@ Model::Model(const std::string& path)
                             root(new Quad(*this, std::make_tuple(0, 0, width, height), 0)),
                             error_sum(root->m_error * root->m_area) 
 { 
-    
     cv::cvtColor(im, im, cv::COLOR_BGR2RGB);
     push(*root);
 }
@@ -214,7 +213,7 @@ void Model::split() {
 
 // Implement of Quad
 Quad::Quad(Model& model, std::tuple<int, int, int, int> box, int depth)
-    : m_model(&model), m_box(box), m_leaf(is_leaf()),  hist(calculate_histogram_cv(cropImage(m_model->im, m_box))), m_area(compute_area()){
+    : m_model(&model), m_box(box), m_leaf(is_leaf()), hist(calculate_histogram_cv(cropImage(m_model->im, m_box))), m_depth(depth), m_area(compute_area()){
     // In the Quad constructor
     auto result = color_from_histogram(hist);
     // Unpack the tuple into m_color and m_error
