@@ -20,7 +20,7 @@ public:
     bool is_leaf() const;
     double compute_area();
     std::vector<Quad> split();
-    std::vector<Quad> get_leaf_nodes(int max_depth) const;
+    std::vector<Quad*> get_leaf_nodes(int max_depth) const;
 
 // private... maybe... later...
     // Member variables
@@ -53,6 +53,32 @@ public:
 
     void setDepth(int depth) {
         m_depth = depth;
+    }
+    // Getter for m_box
+    std::tuple<int, int, int, int> getBox() const {
+        return m_box;
+    }
+
+    // Setter for m_box
+    void setBox(const std::tuple<int, int, int, int>& newBox) {
+        m_box = newBox;
+
+        // // After setting the new box, you might want to recalculate related values
+        // hist = calculate_histogram_cv(cropImage(m_model->im, m_box));
+        // m_area = compute_area();
+
+        // auto result = color_from_histogram(hist);
+        // std::tie(m_color, m_error) = result;
+    }
+
+    // Getter for m_color
+    std::tuple<int, int, int> getColor() const {
+        return m_color;
+    }
+
+    // Setter for m_color
+    void setColor(const std::tuple<int, int, int>& newColor) {
+        m_color = newColor;
     }
 };
 

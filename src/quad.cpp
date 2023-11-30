@@ -134,8 +134,8 @@ Model::Model(const std::string& path)
 std::vector<Quad> Model::getQuads() const {
     // 將優先級隊列轉換為向量
     std::vector<Quad> quads_vector = convertPriorityQueueToVector(heap);
-    std::cout << "Type of quads_vector: " << typeid(quads_vector).name() << std::endl;
-    std::cout << "Length of quads_vector: " << quads_vector.size() << std::endl;
+    // std::cout << "Type of quads_vector: " << typeid(quads_vector).name() << std::endl;
+    // std::cout << "Length of quads_vector: " << quads_vector.size() << std::endl;
     return quads_vector;
 }
 
@@ -290,14 +290,12 @@ std::vector<Quad> Quad::split() {
     return {l_up, r_up, l_down, r_down};
 }
 
-std::vector<Quad> Quad::get_leaf_nodes(int max_depth) const {
-    std::vector<Quad> leaves;
+std::vector<Quad*> Quad::get_leaf_nodes(int max_depth) const {
+    std::vector<Quad*> leaves;
 
-    // 使用 is_leaf_node() 和 m_depth 來確定是否是葉子節點
-    if (is_leaf() || m_depth >= max_depth) {
-        leaves.push_back(*this);  // 如果是葉子節點，將當前節點加入結果中
+    if (children.empty() || (max_depth != -1 && m_depth >= max_depth)) {
+        leaves.push_back(const_cast<Quad*>(this));
     } else {
-        // 遞迴調用 get_leaf_nodes
         for (const auto& child : children) {
             auto child_leaves = child.get_leaf_nodes(max_depth);
             leaves.insert(leaves.end(), child_leaves.begin(), child_leaves.end());
@@ -306,6 +304,7 @@ std::vector<Quad> Quad::get_leaf_nodes(int max_depth) const {
 
     return leaves;
 }
+
 
 // void cpp_callback1(bool i, std::string id, py::array_t<uint8_t>& img)
 // { 
@@ -369,6 +368,7 @@ PYBIND11_MODULE(quad, m) {
         .def_property_readonly("width", &Model::getWidth)
         .def_property_readonly("height", &Model::getHeight)
         .def_property_readonly("root", &Model::getRoot);  // 添加 root 的 getter
+        
 
     py::class_<Quad>(m, "Quad")
         .def(py::init<Model&, std::tuple<int, int, int, int>, int>(), "Constructor for the Quad class.")
@@ -376,7 +376,9 @@ PYBIND11_MODULE(quad, m) {
         .def("compute_area", &Quad::compute_area, "Compute the area of the quad.")
         .def("split", &Quad::split, "Split the quad into child quads.")
         .def("get_leaf_nodes", &Quad::get_leaf_nodes, "Get the leaf nodes of the quad.")
-        .def_property("m_depth", &Quad::getDepth, &Quad::setDepth);
+        .def_property("depth", &Quad::getDepth, &Quad::setDepth)
+        .def_property("color", &Quad::getColor, &Quad::setColor)
+        .def_property("box", &Quad::getBox, &Quad::setBox);
 
     m.def("color_from_histogram", &color_from_histogram, "Calculate color and luminance from histogram.");
     m.def("weighted_average", &weighted_average, "Calculate the weighted average.");

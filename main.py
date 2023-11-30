@@ -124,6 +124,8 @@ class Model(object):
             l, t, r, b = quad.box
             box = (l * m + dx, t * m + dy, r * m - 1, b * m - 1)
             if MODE == MODE_ELLIPSE:
+                print("box:", quad.box)
+                print("color:", quad.color)
                 draw.ellipse(box, quad.color)
             elif MODE == MODE_ROUNDED_RECTANGLE:
                 radius = m * min((r - l), (b - t)) / 4

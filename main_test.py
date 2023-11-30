@@ -12,7 +12,7 @@ MODE_RECTANGLE = 1
 MODE_ELLIPSE = 2
 MODE_ROUNDED_RECTANGLE = 3
 
-MODE = MODE_ELLIPSE
+MODE = MODE_RECTANGLE
 ITERATIONS = 128
 LEAF_SIZE = 4
 PADDING = 1
@@ -34,7 +34,7 @@ def rounded_rectangle(draw, box, radius, color):
     draw.rectangle((l + d, t, r - d, b), color)
 
 def render(model, path, max_depth=10):
-    print("into render")
+    # print("into render")
     m = OUTPUT_SCALE
     dx, dy = (PADDING, PADDING)
     im = Image.new('RGB', (model.width * m + dx, model.height * m + dy))
@@ -43,19 +43,22 @@ def render(model, path, max_depth=10):
     
     frames_folder = 'frames'  # Specify the frames folder
     root = model.root
-    print(root.get_leaf_nodes(max_depth))
     for i, quad in enumerate(root.get_leaf_nodes(max_depth)):
         x, y, width, height = quad.box
         box = (x * m + dx, (y + height) * m + dy, (x + width) * m - 1, y * m - 1)
-        print(MODE)
+        # print(MODE)
         if MODE == MODE_ELLIPSE:
-            print("box:", quad.color)
+            print("box:", box)
             print("color:", quad.color)
             draw.ellipse(box, quad.color)
         elif MODE == MODE_ROUNDED_RECTANGLE:
+            print("box:", box)
+            print("color:", quad.color)
             radius = m * min(width, height) / 4
             rounded_rectangle(draw, box, radius, quad.color)
         else:
+            print("box:", box)
+            print("color:", quad.color)
             draw.rectangle(box, quad.color)
         
         # Save each frame into the "frames" folder
@@ -83,7 +86,7 @@ def main():
     render(model,'output.jpg')
     print('-' * 32)
     heap = model.getQuads()
-    depth = Counter(x.m_depth for x in heap)
+    depth = Counter(x.depth for x in heap)
     for key in sorted(depth):
         value = depth[key]
         n = 4 ** key
@@ -93,7 +96,7 @@ def main():
     print('             %8d %8.2f%%' % (len(model.getQuads()), 100))
     print(max(depth))
     for max_depth in range(max(depth) + 1):
-       render( model, 'out%d.jpg' % max_depth)
+       render( model, 'out%d.png' % max_depth)
 
 
 
