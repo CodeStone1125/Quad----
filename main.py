@@ -22,18 +22,19 @@ def weighted_average(hist):
     value = sum(i * x for i, x in enumerate(hist)) / total
     error = sum(x * (value - i) ** 2 for i, x in enumerate(hist)) / total
     error = error ** 0.5
-    # errorMessage = "error: " + str(error)
-    # print(errorMessage)
     return value, error
 
 def color_from_histogram(hist):
+    print("RGB first element",hist[0],hist[256],hist[512])
+    print("hist:", hist)
     r, re = weighted_average(hist[:256])
     g, ge = weighted_average(hist[256:512])
     b, be = weighted_average(hist[512:768])
 
     # Convert float values to integers by rounding
     r, g, b = int(round(r)), int(round(g)), int(round(b))
-
+    print(r, g, b)
+    print(re, ge, be)
     e = re * 0.2989 + ge * 0.5870 + be * 0.1140
     return (r, g, b), e
 
@@ -60,6 +61,7 @@ class Quad(object):
         self.children = []
     def is_leaf(self):
         l, t, r, b = self.box
+        #print("leaf")
         return int(r - l <= LEAF_SIZE or b - t <= LEAF_SIZE)
     def compute_area(self):
         l, t, r, b = self.box
@@ -121,11 +123,12 @@ class Model(object):
         frames_folder = 'frames'  # Specify the frames folder
         
         for i, quad in enumerate(self.root.get_leaf_nodes(max_depth)):
+            # print("quad:", i)
             l, t, r, b = quad.box
             box = (l * m + dx, t * m + dy, r * m - 1, b * m - 1)
+            # print("box:", quad.box)
+            # print("color:", quad.color)
             if MODE == MODE_ELLIPSE:
-                print("box:", quad.box)
-                print("color:", quad.color)
                 draw.ellipse(box, quad.color)
             elif MODE == MODE_ROUNDED_RECTANGLE:
                 radius = m * min((r - l), (b - t)) / 4
@@ -147,11 +150,18 @@ def main():
         print('Usage: python main.py input_image')
         return
     model = Model(args[0])
+    print(model.width) #640
+    print(model.height) #487
+    print(model.root.color) #(125, 147, 146)
+    print(model.root.error) #55.80494445223306
+    print(model.root.area) #311680
+    print(model.error_sum) #17393285.086872
+    return 0
     previous = None
     for i in range(ITERATIONS):
         error = model.average_error()
         if previous is None or previous - error > ERROR_RATE:
-            print(i, error)
+            # print(i, error)
             if SAVE_FRAMES:
                 model.render('frames/%06d.png' % i)
             previous = error

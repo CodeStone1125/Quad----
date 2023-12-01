@@ -15,7 +15,7 @@ class Model;
 class Quad {
 public:
     // Constructor
-    Quad(Model& model, std::tuple<int, int, int, int> box, int depth);
+    Quad(Model& model, std::tuple<double, double, double, double> box, int depth);
     // Member functions
     bool is_leaf() const;
     double compute_area();
@@ -25,7 +25,7 @@ public:
 // private... maybe... later...
     // Member variables
     Model* m_model;  // Use a pointer to the Model class
-    std::tuple<int, int, int, int> m_box;
+    std::tuple<double, double, double, double> m_box;
     bool m_leaf;
     std::vector<int> hist;
     int m_depth;
@@ -47,30 +47,29 @@ public:
     }
 
     // Getter and setter for m_depth
-    int getDepth() const {
-        return m_depth;
-    }
+    int getDepth() const { return m_depth; }
+    void setDepth(int depth) { m_depth = depth; }
 
-    void setDepth(int depth) {
-        m_depth = depth;
-    }
     // Getter for m_box
-    std::tuple<int, int, int, int> getBox() const {
+    std::tuple<double, double, double, double>  getBox() const {
         return m_box;
     }
-
     // Setter for m_box
-    void setBox(const std::tuple<int, int, int, int>& newBox) {
+    void setBox(const std::tuple<double, double, double, double> & newBox) {
         m_box = newBox;
 
         // // After setting the new box, you might want to recalculate related values
         // hist = calculate_histogram_cv(cropImage(m_model->im, m_box));
         // m_area = compute_area();
-
         // auto result = color_from_histogram(hist);
         // std::tie(m_color, m_error) = result;
     }
-
+    double getArea() const {
+        return m_area;
+    }
+    double getError() const {
+        return m_error;
+    }
     // Getter for m_color
     std::tuple<int, int, int> getColor() const {
         return m_color;
@@ -99,7 +98,7 @@ public:
     Quad pop();
     void split();
     // void render(const std::string& path, int max_depth) const;
-// private... maybe... later...
+    // private... maybe... later...
     cv::Mat im;
     int width;
     int height;
@@ -107,13 +106,11 @@ public:
     std::priority_queue<std::tuple<int, double, Quad>, std::vector<std::tuple<int, double, Quad>>, CompareQuad> heap;
     Quad* root;  // Use a pointer to the Quad class
     double error_sum;
-
     // Define properties for width and height
     int getWidth() const { return width; }
     int getHeight() const { return height; }
-    Quad* getRoot() const {
-        return root;
-    }
+    Quad* getRoot() const { return root; }
+    double getErrorsum() const { return error_sum; }
     // Helper function to convert priority_queue to vector
     std::vector<Quad> convertPriorityQueueToVector(const std::priority_queue<std::tuple<int, double, Quad>, std::vector<std::tuple<int, double, Quad>>, CompareQuad>& pq) const {
         std::vector<Quad> vec;

@@ -44,21 +44,18 @@ def render(model, path, max_depth=10):
     frames_folder = 'frames'  # Specify the frames folder
     root = model.root
     for i, quad in enumerate(root.get_leaf_nodes(max_depth)):
+        print("quad:", i)
         x, y, width, height = quad.box
         box = (x * m + dx, (y + height) * m + dy, (x + width) * m - 1, y * m - 1)
+        print("box:", box)
+        print("color:", quad.color)
         # print(MODE)
         if MODE == MODE_ELLIPSE:
-            print("box:", box)
-            print("color:", quad.color)
             draw.ellipse(box, quad.color)
         elif MODE == MODE_ROUNDED_RECTANGLE:
-            print("box:", box)
-            print("color:", quad.color)
             radius = m * min(width, height) / 4
             rounded_rectangle(draw, box, radius, quad.color)
         else:
-            print("box:", box)
-            print("color:", quad.color)
             draw.rectangle(box, quad.color)
         
         # Save each frame into the "frames" folder
@@ -73,12 +70,21 @@ def main():
         print('Usage: python main.py input_image')
         return
     print(args[0])
+    #-------------------------------------OK--------------------------------------#
     model = quad.Model(args[0])
+    print(model.width) #640
+    print(model.height) #487
+    print(model.root.color) #(127, 131, 125)
+    print(model.root.error) #73.14425527457749
+    print(model.root.area) #311680.0
+    print(model.error_sum) #22797601.483980313
+
+    return 0
     previous = None
     for i in range(ITERATIONS):
         error = model.averageError()
         if previous is None or previous - error > ERROR_RATE:
-            print(i, error)
+            # print(i, error)
             if SAVE_FRAMES:
                 render(model,'frames/%06d.png' % i)
             previous = error
