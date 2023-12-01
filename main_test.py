@@ -33,7 +33,7 @@ def rounded_rectangle(draw, box, radius, color):
     draw.rectangle((l, t + d, r, b - d), color)
     draw.rectangle((l + d, t, r - d, b), color)
 
-def render(model, path, max_depth=10):
+def render(model, path, max_depth=1):
     # print("into render")
     m = OUTPUT_SCALE
     dx, dy = (PADDING, PADDING)
@@ -43,12 +43,13 @@ def render(model, path, max_depth=10):
     
     frames_folder = 'frames'  # Specify the frames folder
     root = model.root
+    print(root.children)
     for i, quad in enumerate(root.get_leaf_nodes(max_depth)):
-        print("quad:", i)
+        # print("quad:", i)
         x, y, width, height = quad.box
         box = (x * m + dx, (y + height) * m + dy, (x + width) * m - 1, y * m - 1)
-        print("box:", box)
-        print("color:", quad.color)
+        # print("box:", box)
+        # print("color:", quad.color)
         # print(MODE)
         if MODE == MODE_ELLIPSE:
             draw.ellipse(box, quad.color)
@@ -70,21 +71,21 @@ def main():
         print('Usage: python main.py input_image')
         return
     print(args[0])
-    #-------------------------------------OK--------------------------------------#
+    
     model = quad.Model(args[0])
-    print(model.width) #640
-    print(model.height) #487
-    print(model.root.color) #(127, 131, 125)
-    print(model.root.error) #73.14425527457749
-    print(model.root.area) #311680.0
-    print(model.error_sum) #22797601.483980313
 
-    return 0
+    # print(model.width) #640
+    # print(model.height) #487
+    # print(model.root.color) #(125, 147, 146)
+    # print(model.root.error) #55.80494445223306
+    # print(model.root.area) #311680.0
+    # print(model.error_sum) #17393285.086872
+#-------------------------------------OK--------------------------------------#
     previous = None
     for i in range(ITERATIONS):
         error = model.averageError()
         if previous is None or previous - error > ERROR_RATE:
-            # print(i, error)
+            print(i, error)
             if SAVE_FRAMES:
                 render(model,'frames/%06d.png' % i)
             previous = error

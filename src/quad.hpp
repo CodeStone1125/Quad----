@@ -35,7 +35,7 @@ public:
     double m_area;
     std::vector<Quad> children;
 
-    // getLastElement method for Quad
+    // // getLastElement method for Quad
     Quad getLastElement() const {
         if (!children.empty()) {
             return children.back();
@@ -79,9 +79,10 @@ public:
     void setColor(const std::tuple<int, int, int>& newColor) {
         m_color = newColor;
     }
+    std::vector<Quad> getChildren(){ return children; }
 };
 
-// For std::priority_queue compare fountion
+// // For std::priority_queue compare fountion
 struct CompareQuad {
     bool operator()(const std::tuple<int, double, Quad>& a, const std::tuple<int, double, Quad>& b) const {
         // compare with 2nd element

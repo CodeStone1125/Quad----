@@ -53,12 +53,12 @@ extern "C" std::tuple<double, double> weighted_average(const std::vector<double>
 // Function to calculate color and luminance from histogram
 extern "C" std::tuple<std::tuple<uint8_t, uint8_t, uint8_t>, double> color_from_histogram(const std::vector<int>& hist) {
     // Calculate weighted averages for each channel
-    std::cout <<"RGB first element"<< hist[0] << " " << hist[256] << " " << hist[512] << std::endl;
-    std::cout << "hist: ";
-    for (double value : hist) {
-        std::cout << value << " ";
-    }
-    std::cout << std::endl;
+    // std::cout <<"RGB first element"<< hist[0] << " " << hist[256] << " " << hist[512] << std::endl;
+    // std::cout << "hist: ";
+    // for (double value : hist) {
+    //     std::cout << value << " ";
+    // }
+    // std::cout << std::endl;
     std::tuple<uint8_t, double> red_average = weighted_average(std::vector<double>(hist.begin(), hist.begin() + 256));
     std::tuple<uint8_t, double> green_average = weighted_average(std::vector<double>(hist.begin() + 256, hist.begin() + 512));
     std::tuple<uint8_t, double> blue_average = weighted_average(std::vector<double>(hist.begin() + 512, hist.end()));
@@ -89,13 +89,13 @@ extern "C" std::vector<int> calculate_histogram_cv(const cv::Mat& bgr_image) {
                 for (int i = 0; i < 3; ++i) {
                     uchar pixel_value = channels[i].at<uchar>(y, x);
                     if (i == 0) {
-                        // 红色通道
+                        // red
                         histogram[2 * 256 + pixel_value]++;
                     } else if (i == 2) {
-                        // 蓝色通道
+                        // blue
                         histogram[0 * 256 + pixel_value]++;
                     } else {
-                        // 绿色通道，保持不变
+                        // green
                         histogram[1 * 256 + pixel_value]++;
                     }
                 }
@@ -149,6 +149,8 @@ std::vector<Quad> Model::getQuads() const {
 }
 
 double Model::averageError() const {
+    // std::cout << std::fixed << std::setprecision(2); // Set precision to 2 decimal places
+    // std::cout << "error_sum, width, height: " << error_sum << ", " << width << ", " << height << std::endl;
     return error_sum / (width * height);
 }
 
@@ -156,54 +158,54 @@ void Model::push(Quad& quad) {
     double score = -quad.m_error * std::pow(quad.m_area, AREA_POWER);
     heap.push(std::make_tuple(quad.m_leaf, score, quad));
 
-    // Reconstruct the priority_queue to maintain the min heap property
-    auto tempContainer = heap;
-    std::vector<std::tuple<int, double, Quad>> heapCopy;
-    while (!tempContainer.empty()) {
-        heapCopy.push_back(tempContainer.top());
-        tempContainer.pop();
+    // Reconstruct the heap to maintain the min heap property
+    auto heapCopy = heap;  // Copy the priority_queue
+    std::vector<std::tuple<int, double, Quad>> heapVec;
+    
+    while (!heapCopy.empty()) {
+        heapVec.push_back(heapCopy.top());
+        heapCopy.pop();
     }
 
-    std::make_heap(heapCopy.begin(), heapCopy.end(), [](const auto& a, const auto& b) {
+    std::make_heap(heapVec.begin(), heapVec.end(), [](const auto& a, const auto& b) {
         return std::get<1>(a) > std::get<1>(b);  // Compare elements based on score
     });
 
-    // Reconstruct the priority_queue from the updated heapCopy
-    heap = std::priority_queue<std::tuple<int, double, Quad>, std::vector<std::tuple<int, double, Quad>>, CompareQuad>(
-        heapCopy.begin(), heapCopy.end()
-    );
+    // Reconstruct the heap from the updated container
+    heap = decltype(heap)(heapVec.begin(), heapVec.end());
 }
 
 Quad Model::pop() {
-    // Reconstruct the priority_queue to maintain the min heap property
-    auto tempContainer = heap;
-    std::vector<std::tuple<int, double, Quad>> heapCopy;
-    while (!tempContainer.empty()) {
-        heapCopy.push_back(tempContainer.top());
-        tempContainer.pop();
+    // Reconstruct the heap to maintain the min heap property
+    auto heapCopy = heap;  // Copy the priority_queue
+    std::vector<std::tuple<int, double, Quad>> heapVec;
+
+    while (!heapCopy.empty()) {
+        heapVec.push_back(heapCopy.top());
+        heapCopy.pop();
     }
 
-    std::pop_heap(heapCopy.begin(), heapCopy.end(), [](const auto& a, const auto& b) {
+    std::pop_heap(heapVec.begin(), heapVec.end(), [](const auto& a, const auto& b) {
         return std::get<1>(a) > std::get<1>(b);  // Compare elements based on score
     });
 
-    Quad quad = std::get<2>(heapCopy.front());
+    Quad quad = std::get<2>(heapVec.back());
 
     // Remove the top element from the heapCopy
-    heapCopy.pop_back();
+    heapVec.pop_back();
 
-    std::sort_heap(heapCopy.begin(), heapCopy.end(), [](const auto& a, const auto& b) {
+    std::sort_heap(heapVec.begin(), heapVec.end(), [](const auto& a, const auto& b) {
         return std::get<1>(a) > std::get<1>(b);  // Compare elements based on score
     });
 
-    // Reconstruct the priority_queue from the updated heapCopy
-    heap = std::priority_queue<std::tuple<int, double, Quad>, decltype(heapCopy), CompareQuad>(
-        heapCopy.begin(), heapCopy.end()
-    );
-
+    // Reconstruct the heap from the updated container
+    heap = decltype(heap)(heapVec.begin(), heapVec.end());
 
     return quad;
 }
+
+
+
 
 void Model::split() {
     Quad quad = pop();
@@ -218,22 +220,27 @@ void Model::split() {
 }/* End of Model implementation*/ 
 
 // Implement of Quad
-Quad::Quad(Model& model, std::tuple<double, double, double, double> box , int depth)
-    : m_model(&model), m_box(box), m_leaf(is_leaf()), hist(calculate_histogram_cv(cropImage(m_model->im, m_box))), m_depth(depth), m_area(compute_area()){
+Quad::Quad(Model& model, std::tuple<double, double, double, double> box, int depth)
+    : m_model(&model), m_box(box), m_leaf(is_leaf()), hist(calculate_histogram_cv(cropImage(m_model->im, m_box))), m_depth(depth), m_area(compute_area()) {
+    // Print information about the Quad
+    // std::cout << "Quad created with depth: " << m_depth << std::endl;
+    // std::cout << "Box: (" << std::get<0>(m_box) << ", " << std::get<1>(m_box) << ", " << std::get<2>(m_box) << ", " << std::get<3>(m_box) << ")" << std::endl;
+    
     // In the Quad constructor
     auto result = color_from_histogram(hist);
+    
     // Unpack the tuple into m_color and m_error
     std::tie(m_color, m_error) = result;
+    // std::cout << "color: (" << std::get<0>(m_color) << ", " << std::get<1>(m_color) << ", " << std::get<2>(m_color) << ") " << std::endl;
     children = {};  // Initialize children directly
 }
-
 
 bool Quad::is_leaf() const{
     double x, y, width, height;
     std::tie(x, y, width, height) = m_box;
-    if((width  <= LEAF_SIZE || height <= LEAF_SIZE)){
-        printf("leaf");
-    }
+    // if((width  <= LEAF_SIZE || height <= LEAF_SIZE)){
+    //     printf("leaf");
+    // }
     return (width  <= LEAF_SIZE || height <= LEAF_SIZE); //width and height
 }
 
@@ -257,24 +264,30 @@ std::vector<Quad> Quad::split() {
     Quad r_down(*m_model, std::make_tuple(x_mid, y, newWidth, newHeight), depth);  // 使用 m_model
     Quad r_up(*m_model, std::make_tuple(x_mid, y_mid, newWidth, newHeight), depth);  // 使用 m_model
 
-    // 使用 std::vector 返回新創建的 Quad 對象
-    return {l_up, r_up, l_down, r_down};
+    children = {l_up, r_up, l_down, r_down};  // 修改 childern 为 children
+    std::cout << "len(childen) in split(): " << children.size() <<std::endl;
+    // 使用 std::vector 返回新创建的 Quad 对象
+    return children;
 }
 
 std::vector<Quad*> Quad::get_leaf_nodes(int max_depth) const {
+    std::cout << "into get_leaf_nodes: " << std::endl;
     std::vector<Quad*> leaves;
-
-    if (children.empty() || (max_depth != -1 && m_depth >= max_depth)) {
-        leaves.push_back(const_cast<Quad*>(this));
+    std::cout << "len(childen): " << children.size() <<  "  m_depth: " << m_depth << "  m_leaf: " << m_leaf <<std::endl;
+    if (children.empty() || m_depth >= max_depth|| m_leaf) {
+        leaves.push_back(const_cast<Quad*>(this));  // Use push_back to add a single element
+        // std::cout << "len(leaves): " << leaves.size() << std::endl;
+        return leaves;
     } else {
         for (const auto& child : children) {
             auto child_leaves = child.get_leaf_nodes(max_depth);
             leaves.insert(leaves.end(), child_leaves.begin(), child_leaves.end());
         }
     }
-
+    std::cout << "len(leaves): " << leaves.size() << std::endl;
     return leaves;
 }
+
 
 PYBIND11_MODULE(quad, m) {
     m.doc() = "Quad image compressor";
@@ -300,6 +313,7 @@ PYBIND11_MODULE(quad, m) {
         .def("get_leaf_nodes", &Quad::get_leaf_nodes, "Get the leaf nodes of the quad.")
         .def_property_readonly("error", &Quad::getError)
         .def_property_readonly("area", &Quad::getArea)
+        .def_property_readonly("children", &Quad::getChildren)
         .def_property("depth", &Quad::getDepth, &Quad::setDepth)
         .def_property("color", &Quad::getColor, &Quad::setColor)
         .def_property("box", &Quad::getBox, &Quad::setBox);

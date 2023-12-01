@@ -25,16 +25,16 @@ def weighted_average(hist):
     return value, error
 
 def color_from_histogram(hist):
-    print("RGB first element",hist[0],hist[256],hist[512])
-    print("hist:", hist)
+    # print("RGB first element",hist[0],hist[256],hist[512])
+    # print("hist:", hist)
     r, re = weighted_average(hist[:256])
     g, ge = weighted_average(hist[256:512])
     b, be = weighted_average(hist[512:768])
 
     # Convert float values to integers by rounding
     r, g, b = int(round(r)), int(round(g)), int(round(b))
-    print(r, g, b)
-    print(re, ge, be)
+    # print(r, g, b)
+    # print(re, ge, be)
     e = re * 0.2989 + ge * 0.5870 + be * 0.1140
     return (r, g, b), e
 
@@ -53,7 +53,7 @@ class Quad(object):
     def __init__(self, model, box, depth):
         self.model = model
         self.box = box
-        self.depth = depth
+        self.depth = depth      
         hist = self.model.im.crop(self.box).histogram()
         self.color, self.error = color_from_histogram(hist)
         self.leaf = self.is_leaf()
@@ -61,7 +61,6 @@ class Quad(object):
         self.children = []
     def is_leaf(self):
         l, t, r, b = self.box
-        #print("leaf")
         return int(r - l <= LEAF_SIZE or b - t <= LEAF_SIZE)
     def compute_area(self):
         l, t, r, b = self.box
@@ -76,8 +75,10 @@ class Quad(object):
         bl = Quad(self.model, (l, tb, lr, b), depth)
         br = Quad(self.model, (lr, tb, r, b), depth)
         self.children = (tl, tr, bl, br)
+
         return self.children
     def get_leaf_nodes(self, max_depth=None):
+        print("into get_leaf_nodes")
         if not self.children:
             return [self]
         if max_depth is not None and self.depth >= max_depth:
@@ -85,6 +86,7 @@ class Quad(object):
         result = []
         for child in self.children:
             result.extend(child.get_leaf_nodes(max_depth))
+        # print(len(result))
         return result
 
 class Model(object):
@@ -99,6 +101,7 @@ class Model(object):
     def quads(self):
         return [x[-1] for x in self.heap]
     def average_error(self):
+        # print("error_sum, width, height: ",self.error_sum, self.width, self.height)
         return self.error_sum / (self.width * self.height)
     def push(self, quad):
         score = -quad.error * (quad.area ** AREA_POWER)
@@ -113,20 +116,21 @@ class Model(object):
             self.push(child)
             self.error_sum += child.error * child.area
         # Create gif, not necrssary
-    def render(self, path, max_depth=None):
+    def render(self, path, max_depth=1):
         m = OUTPUT_SCALE
         dx, dy = (PADDING, PADDING)
         im = Image.new('RGB', (self.width * m + dx, self.height * m + dy))
         draw = ImageDraw.Draw(im)
         draw.rectangle((0, 0, self.width * m, self.height * m), FILL_COLOR)
-        
+        # print("box:", self.box)
+        # print("color:", self.quads.color)
         frames_folder = 'frames'  # Specify the frames folder
         
         for i, quad in enumerate(self.root.get_leaf_nodes(max_depth)):
             # print("quad:", i)
             l, t, r, b = quad.box
             box = (l * m + dx, t * m + dy, r * m - 1, b * m - 1)
-            # print("box:", quad.box)
+            # print("box:", box)
             # print("color:", quad.color)
             if MODE == MODE_ELLIPSE:
                 draw.ellipse(box, quad.color)
@@ -150,18 +154,11 @@ def main():
         print('Usage: python main.py input_image')
         return
     model = Model(args[0])
-    print(model.width) #640
-    print(model.height) #487
-    print(model.root.color) #(125, 147, 146)
-    print(model.root.error) #55.80494445223306
-    print(model.root.area) #311680
-    print(model.error_sum) #17393285.086872
-    return 0
     previous = None
     for i in range(ITERATIONS):
         error = model.average_error()
         if previous is None or previous - error > ERROR_RATE:
-            # print(i, error)
+            print(i, error)
             if SAVE_FRAMES:
                 model.render('frames/%06d.png' % i)
             previous = error
