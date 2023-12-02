@@ -206,17 +206,19 @@ Quad Model::pop() {
 
 
 
-
+// Model::split() implementation
 void Model::split() {
     Quad quad = pop();
     error_sum -= quad.m_error * quad.m_area;
-    
-    std::vector<Quad> children = quad.split();
-    
-    for (Quad& child : children) {
-        push(child);
-        error_sum += child.m_error * child.m_area;
+
+    std::vector<Quad*> _children = quad.split();
+    //std::cout << "Children size: " << quad.children.size() << std::endl;
+
+    for (const auto& child : _children) {
+        push(*child);  // Note: Dereference the Quad* before pushing to the heap
+        error_sum += child->m_error * child->m_area;  // Note: Use -> to access members of Quad*
     }
+
 }/* End of Model implementation*/ 
 
 // Implement of Quad
@@ -250,7 +252,8 @@ double Quad::compute_area() {
     return static_cast<double>(width * height);
 }
 
-std::vector<Quad> Quad::split() {
+// Quad::split() implementation
+std::vector<Quad*> Quad::split() {
     double x, y, width, height;    //(x, y) is left-down
     std::tie(x, y, width, height) = m_box;  // 使用 m_box
     double newWidth = width / 2;
@@ -259,13 +262,18 @@ std::vector<Quad> Quad::split() {
     double y_mid = y + newHeight;
     int depth = m_depth + 1;  // 使用 m_depth
 
-    Quad l_down(*m_model, std::make_tuple(x, y, newWidth, newHeight), depth);  // 使用 m_model
-    Quad l_up(*m_model, std::make_tuple(x, y_mid, newWidth, newHeight), depth);  // 使用 m_model
-    Quad r_down(*m_model, std::make_tuple(x_mid, y, newWidth, newHeight), depth);  // 使用 m_model
-    Quad r_up(*m_model, std::make_tuple(x_mid, y_mid, newWidth, newHeight), depth);  // 使用 m_model
+    Quad* l_down = new Quad(*m_model, std::make_tuple(x, y, newWidth, newHeight), depth);  // 使用 m_model
+    Quad* l_up = new Quad(*m_model, std::make_tuple(x, y_mid, newWidth, newHeight), depth);  // 使用 m_model
+    Quad* r_down = new Quad(*m_model, std::make_tuple(x_mid, y, newWidth, newHeight), depth);  // 使用 m_model
+    Quad* r_up = new Quad(*m_model, std::make_tuple(x_mid, y_mid, newWidth, newHeight), depth);  // 使用 m_model
 
-    children = {l_up, r_up, l_down, r_down};  // 修改 childern 为 children
-    std::cout << "len(childen) in split(): " << children.size() <<std::endl;
+    // Quad* q1 = new Quad(*m_model, std::make_tuple(0, 0, 0,0), 0);  // 使用 m_model
+    // Quad* q2 = new Quad(*m_model, std::make_tuple(0, 0, 0,0), 0);  // 使用 m_model
+    // Quad* q3 = new Quad(*m_model, std::make_tuple(0, 0, 0,0), 0);  // 使用 m_model
+    // Quad* q4 = new Quad(*m_model, std::make_tuple(0, 0, 0,0), 0);   // 使用 m_model
+
+    children = {l_down, l_up, r_down, r_up};  // Use children instead of childern
+
     // 使用 std::vector 返回新创建的 Quad 对象
     return children;
 }
@@ -274,13 +282,13 @@ std::vector<Quad*> Quad::get_leaf_nodes(int max_depth) const {
     std::cout << "into get_leaf_nodes: " << std::endl;
     std::vector<Quad*> leaves;
     std::cout << "len(childen): " << children.size() <<  "  m_depth: " << m_depth << "  m_leaf: " << m_leaf <<std::endl;
-    if (children.empty() || m_depth >= max_depth|| m_leaf) {
+    if (children.empty() || m_depth >= max_depth || m_leaf) {
         leaves.push_back(const_cast<Quad*>(this));  // Use push_back to add a single element
         // std::cout << "len(leaves): " << leaves.size() << std::endl;
         return leaves;
     } else {
         for (const auto& child : children) {
-            auto child_leaves = child.get_leaf_nodes(max_depth);
+            auto child_leaves = child->get_leaf_nodes(max_depth);  // Dereference the shared_ptr
             leaves.insert(leaves.end(), child_leaves.begin(), child_leaves.end());
         }
     }
@@ -306,7 +314,7 @@ PYBIND11_MODULE(quad, m) {
         
 
     py::class_<Quad>(m, "Quad")
-        .def(py::init<Model&, std::tuple<int, int, int, int>, int>(), "Constructor for the Quad class.")
+        .def(py::init<Model&, std::tuple<double, double, double, double>, int>(), "Constructor for the Quad class.")
         .def("is_leaf", &Quad::is_leaf, "Check if the quad is a leaf.")
         .def("compute_area", &Quad::compute_area, "Compute the area of the quad.")
         .def("split", &Quad::split, "Split the quad into child quads.")
@@ -314,9 +322,9 @@ PYBIND11_MODULE(quad, m) {
         .def_property_readonly("error", &Quad::getError)
         .def_property_readonly("area", &Quad::getArea)
         .def_property_readonly("children", &Quad::getChildren)
-        .def_property("depth", &Quad::getDepth, &Quad::setDepth)
-        .def_property("color", &Quad::getColor, &Quad::setColor)
-        .def_property("box", &Quad::getBox, &Quad::setBox);
+        .def_property_readonly("depth", &Quad::getDepth)
+        .def_property_readonly("color", &Quad::getColor)
+        .def_property_readonly("box", &Quad::getBox);
 
     m.def("color_from_histogram", &color_from_histogram, "Calculate color and luminance from histogram.");
     m.def("weighted_average", &weighted_average, "Calculate the weighted average.");

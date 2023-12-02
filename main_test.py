@@ -43,6 +43,8 @@ def render(model, path, max_depth=1):
     
     frames_folder = 'frames'  # Specify the frames folder
     root = model.root
+    print(root.color)
+    print(root.depth)
     print(root.children)
     for i, quad in enumerate(root.get_leaf_nodes(max_depth)):
         # print("quad:", i)

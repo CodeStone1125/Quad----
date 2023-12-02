@@ -19,10 +19,10 @@ public:
     // Member functions
     bool is_leaf() const;
     double compute_area();
-    std::vector<Quad> split();
-    std::vector<Quad*> get_leaf_nodes(int max_depth) const;
+    std::vector<Quad*>  split();  // Use shared_ptr for children
+    std::vector<Quad*> get_leaf_nodes(int max_depth) const;  // Use shared_ptr for leaf nodes
 
-// private... maybe... later...
+    // private... maybe... later...
     // Member variables
     Model* m_model;  // Use a pointer to the Model class
     std::tuple<double, double, double, double> m_box;
@@ -31,17 +31,17 @@ public:
     int m_depth;
     std::tuple<int, int, int> m_color;
     double m_error;
-    
-    double m_area;
-    std::vector<Quad> children;
 
-    // // getLastElement method for Quad
+    double m_area;
+    std::vector<Quad*>  children;  // Use shared_ptr for children
+
+    // getLastElement method for Quad
     Quad getLastElement() const {
         if (!children.empty()) {
-            return children.back();
-        } 
+            return *(children.back());
+        }
         else {
-            // 如果 children 向量為空，返回帶有默認值的 Quad 對象
+            // If children vector is empty, return a Quad object with default values
             return Quad(*m_model, std::make_tuple(0, 0, 100, 100), m_depth);
         }
     }
@@ -51,14 +51,14 @@ public:
     void setDepth(int depth) { m_depth = depth; }
 
     // Getter for m_box
-    std::tuple<double, double, double, double>  getBox() const {
+    std::tuple<double, double, double, double> getBox() const {
         return m_box;
     }
     // Setter for m_box
-    void setBox(const std::tuple<double, double, double, double> & newBox) {
+    void setBox(const std::tuple<double, double, double, double>& newBox) {
         m_box = newBox;
 
-        // // After setting the new box, you might want to recalculate related values
+        // After setting the new box, you might want to recalculate related values
         // hist = calculate_histogram_cv(cropImage(m_model->im, m_box));
         // m_area = compute_area();
         // auto result = color_from_histogram(hist);
@@ -79,7 +79,7 @@ public:
     void setColor(const std::tuple<int, int, int>& newColor) {
         m_color = newColor;
     }
-    std::vector<Quad> getChildren(){ return children; }
+    std::vector<Quad*> getChildren() { return children; }
 };
 
 // // For std::priority_queue compare fountion
