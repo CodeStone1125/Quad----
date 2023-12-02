@@ -22,6 +22,9 @@ ERROR_RATE = 0.5
 AREA_POWER = 0.25
 OUTPUT_SCALE = 1
 
+# Global variable for model
+
+
 def rounded_rectangle(draw, box, radius, color):
     l, t, r, b = box
     d = radius * 2
@@ -33,7 +36,7 @@ def rounded_rectangle(draw, box, radius, color):
     draw.rectangle((l, t + d, r, b - d), color)
     draw.rectangle((l + d, t, r - d, b), color)
 
-def render(model, path, max_depth=1):
+def render(model, path, max_depth=10):
     # print("into render")
     m = OUTPUT_SCALE
     dx, dy = (PADDING, PADDING)
@@ -43,9 +46,9 @@ def render(model, path, max_depth=1):
     
     frames_folder = 'frames'  # Specify the frames folder
     root = model.root
-    print(root.color)
-    print(root.depth)
-    print(root.children)
+    # print(root.color)
+    # print(root.depth)
+    # print(root.children)
     for i, quad in enumerate(root.get_leaf_nodes(max_depth)):
         # print("quad:", i)
         x, y, width, height = quad.box
@@ -67,6 +70,18 @@ def render(model, path, max_depth=1):
     
     del draw
     im.save(path, 'PNG')
+
+def split(model):
+    quad = model.pop()
+    model.error_sum -= quad.error * quad.area
+    _children = quad.split()
+    quad.children = _children
+    print("------------------childrem for quad:" ,quad.children)
+    for child in quad.children:
+        model.push(child)
+        print(f"children color: ({child.color[0]}, {child.color[1]}, {child.color[2]})")
+        model.error_sum += child.error * child.area
+
 def main():
     args = sys.argv[1:]
     if len(args) != 1:
@@ -75,26 +90,41 @@ def main():
     print(args[0])
     
     model = quad.Model(args[0])
-
+    # print("------------------------test model-----------------------------------------")
     # print(model.width) #640
     # print(model.height) #487
     # print(model.root.color) #(125, 147, 146)
     # print(model.root.error) #55.80494445223306
     # print(model.root.area) #311680.0
     # print(model.error_sum) #17393285.086872
+    # print(model.root.children)
+    # print("------------------------test end-----------------------------------------")
 #-------------------------------------OK--------------------------------------#
     previous = None
-    for i in range(ITERATIONS):
+    error = model.averageError()
+    if previous is None or previous - error > ERROR_RATE:
+        if SAVE_FRAMES:
+            render(model,'frames/%06d.png' % i)
+        previous = error
+    #quadtree = model.pop()
+    _children = model.root.split()
+    for child in _children:
+        model.push(child)
+        print(f"children color: ({child.color[0]}, {child.color[1]}, {child.color[2]})")
+        model.error_sum += child.error * child.area
+    render(model,'output.jpg')
+    for i in range(ITERATIONS-1):
         error = model.averageError()
         if previous is None or previous - error > ERROR_RATE:
             print(i, error)
             if SAVE_FRAMES:
                 render(model,'frames/%06d.png' % i)
             previous = error
-        model.split()
+        split(model)
     render(model,'output.jpg')
     print('-' * 32)
     heap = model.getQuads()
+    print("model heap size:", len(heap))
     depth = Counter(x.depth for x in heap)
     for key in sorted(depth):
         value = depth[key]

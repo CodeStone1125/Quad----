@@ -79,7 +79,15 @@ public:
     void setColor(const std::tuple<int, int, int>& newColor) {
         m_color = newColor;
     }
-    std::vector<Quad*> getChildren() { return children; }
+    std::vector<Quad*> getChildren() { 
+        //std::vector<Quad*> _children = children;
+        std::cout << "-----------------Get Children size: " << children.size() << std::endl;
+        return children; 
+    }
+    // Setter for children
+    void setChildren(const std::vector<Quad*>& newChildren) {
+        children = newChildren;
+    }
 };
 
 // // For std::priority_queue compare fountion
@@ -111,7 +119,11 @@ public:
     int getWidth() const { return width; }
     int getHeight() const { return height; }
     Quad* getRoot() const { return root; }
-    double getErrorsum() const { return error_sum; }
+    double getErrorsum(){ return error_sum; }
+        // Setter for error_sum
+    void setErrorSum(double newErrorSum) {
+        error_sum = newErrorSum;
+    }
     // Helper function to convert priority_queue to vector
     std::vector<Quad> convertPriorityQueueToVector(const std::priority_queue<std::tuple<int, double, Quad>, std::vector<std::tuple<int, double, Quad>>, CompareQuad>& pq) const {
         std::vector<Quad> vec;

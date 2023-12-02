@@ -135,7 +135,8 @@ Model::Model(const std::string& path)
                             error_sum(root->m_error * root->m_area) 
 { 
     cv::cvtColor(im, im, cv::COLOR_BGR2RGB);
-    push(*root);
+    //push(*root);
+    std::cout << "heap: " << heap.size() << std::endl;
 }
 
 
@@ -208,22 +209,33 @@ Quad Model::pop() {
 
 // Model::split() implementation
 void Model::split() {
-    Quad quad = pop();
-    error_sum -= quad.m_error * quad.m_area;
+    // Quad quad = pop();
+    // std::cout << "heap after pop: " << heap.size() << std::endl;
+    // error_sum -= quad.m_error * quad.m_area;
+    // std::cout << "quad color: ("
+    //       << std::get<0>(quad.m_color) << ", "
+    //       << std::get<1>(quad.m_color) << ", "
+    //       << std::get<2>(quad.m_color) << ")"
+    //       << std::endl;
 
-    std::vector<Quad*> _children = quad.split();
-    //std::cout << "Children size: " << quad.children.size() << std::endl;
-
-    for (const auto& child : _children) {
-        push(*child);  // Note: Dereference the Quad* before pushing to the heap
-        error_sum += child->m_error * child->m_area;  // Note: Use -> to access members of Quad*
-    }
-
+    // std::vector<Quad*> _children = quad.split();
+    // std::cout << "in quad Children size:---------------- " << quad.children.size() << std::endl;
+    // std::cout << "----------- return Children size: " << _children.size() << std::endl;
+    // for (const auto& child : quad.children) {
+    //     push(*child);  // Note: Dereference the Quad* before pushing to the heap
+    //     std::cout << "children color: ("
+    //       << std::get<0>(child->m_color) << ", "
+    //       << std::get<1>(child->m_color) << ", "
+    //       << std::get<2>(child->m_color) << ")"
+    //       << std::endl;
+    //     error_sum += child->m_error * child->m_area;  // Note: Use -> to access members of Quad*
+    // }
+    // std::cout << "heap after split: " << heap.size() << std::endl;
 }/* End of Model implementation*/ 
 
 // Implement of Quad
 Quad::Quad(Model& model, std::tuple<double, double, double, double> box, int depth)
-    : m_model(&model), m_box(box), m_leaf(is_leaf()), hist(calculate_histogram_cv(cropImage(m_model->im, m_box))), m_depth(depth), m_area(compute_area()) {
+    : m_model(&model), m_box(box), m_leaf(is_leaf()), hist(calculate_histogram_cv(cropImage(m_model->im, m_box))), m_depth(depth), m_area(compute_area()), children() {
     // Print information about the Quad
     // std::cout << "Quad created with depth: " << m_depth << std::endl;
     // std::cout << "Box: (" << std::get<0>(m_box) << ", " << std::get<1>(m_box) << ", " << std::get<2>(m_box) << ", " << std::get<3>(m_box) << ")" << std::endl;
@@ -234,7 +246,7 @@ Quad::Quad(Model& model, std::tuple<double, double, double, double> box, int dep
     // Unpack the tuple into m_color and m_error
     std::tie(m_color, m_error) = result;
     // std::cout << "color: (" << std::get<0>(m_color) << ", " << std::get<1>(m_color) << ", " << std::get<2>(m_color) << ") " << std::endl;
-    children = {};  // Initialize children directly
+    //children = {};  // Initialize children directly
 }
 
 bool Quad::is_leaf() const{
@@ -267,11 +279,6 @@ std::vector<Quad*> Quad::split() {
     Quad* r_down = new Quad(*m_model, std::make_tuple(x_mid, y, newWidth, newHeight), depth);  // 使用 m_model
     Quad* r_up = new Quad(*m_model, std::make_tuple(x_mid, y_mid, newWidth, newHeight), depth);  // 使用 m_model
 
-    // Quad* q1 = new Quad(*m_model, std::make_tuple(0, 0, 0,0), 0);  // 使用 m_model
-    // Quad* q2 = new Quad(*m_model, std::make_tuple(0, 0, 0,0), 0);  // 使用 m_model
-    // Quad* q3 = new Quad(*m_model, std::make_tuple(0, 0, 0,0), 0);  // 使用 m_model
-    // Quad* q4 = new Quad(*m_model, std::make_tuple(0, 0, 0,0), 0);   // 使用 m_model
-
     children = {l_down, l_up, r_down, r_up};  // Use children instead of childern
 
     // 使用 std::vector 返回新创建的 Quad 对象
@@ -279,12 +286,12 @@ std::vector<Quad*> Quad::split() {
 }
 
 std::vector<Quad*> Quad::get_leaf_nodes(int max_depth) const {
-    std::cout << "into get_leaf_nodes: " << std::endl;
+    //std::cout << "into get_leaf_nodes: " << std::endl;
     std::vector<Quad*> leaves;
-    std::cout << "len(childen): " << children.size() <<  "  m_depth: " << m_depth << "  m_leaf: " << m_leaf <<std::endl;
+    //std::cout << "len(childen): " << children.size() <<  "  m_depth: " << m_depth << "  m_leaf: " << m_leaf <<std::endl;
     if (children.empty() || m_depth >= max_depth || m_leaf) {
         leaves.push_back(const_cast<Quad*>(this));  // Use push_back to add a single element
-        // std::cout << "len(leaves): " << leaves.size() << std::endl;
+        //std::cout << "len(leaves): " << leaves.size() << std::endl;
         return leaves;
     } else {
         for (const auto& child : children) {
@@ -307,10 +314,10 @@ PYBIND11_MODULE(quad, m) {
         .def("push", &Model::push, "Push a quad into the model.")
         .def("pop", &Model::pop, "Pop a quad from the model.")
         .def("split", &Model::split, "Split the model into quads.")
-        .def_property_readonly("error_sum", &Model::getErrorsum)
+        .def_property("error_sum", &Model::getErrorsum, &Model::setErrorSum)
         .def_property_readonly("width", &Model::getWidth)
         .def_property_readonly("height", &Model::getHeight)
-        .def_property_readonly("root", &Model::getRoot);  // 添加 root 的 getter
+        .def_property_readonly("root", &Model::getRoot);
         
 
     py::class_<Quad>(m, "Quad")
@@ -319,9 +326,9 @@ PYBIND11_MODULE(quad, m) {
         .def("compute_area", &Quad::compute_area, "Compute the area of the quad.")
         .def("split", &Quad::split, "Split the quad into child quads.")
         .def("get_leaf_nodes", &Quad::get_leaf_nodes, "Get the leaf nodes of the quad.")
+        .def_property("children", &Quad::getChildren, &Quad::setChildren)
         .def_property_readonly("error", &Quad::getError)
         .def_property_readonly("area", &Quad::getArea)
-        .def_property_readonly("children", &Quad::getChildren)
         .def_property_readonly("depth", &Quad::getDepth)
         .def_property_readonly("color", &Quad::getColor)
         .def_property_readonly("box", &Quad::getBox);

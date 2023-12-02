@@ -4,8 +4,9 @@ mkdir -p frames
 # Remove contents of 'frames' directory
 rm frames/*
 # rm out*
-python3 main_test.py assets/star.jpg
+python3 main_test.py assets/star.jpg > test.txt 2>&1
 
 # For ImageMagick v6
 # convert -clear cache
 # ./gif.sh
+
