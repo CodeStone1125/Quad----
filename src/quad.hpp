@@ -79,15 +79,9 @@ public:
     void setColor(const std::tuple<int, int, int>& newColor) {
         m_color = newColor;
     }
-    std::vector<Quad*> getChildren() { 
-        //std::vector<Quad*> _children = children;
-        std::cout << "-----------------Get Children size: " << children.size() << std::endl;
-        return children; 
-    }
+    std::vector<Quad*> getChildren() {return children; }
     // Setter for children
-    void setChildren(const std::vector<Quad*>& newChildren) {
-        children = newChildren;
-    }
+    void setChildren(const std::vector<Quad*>& newChildren) {children = newChildren;}
 };
 
 // // For std::priority_queue compare fountion

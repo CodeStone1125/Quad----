@@ -136,7 +136,7 @@ Model::Model(const std::string& path)
 { 
     cv::cvtColor(im, im, cv::COLOR_BGR2RGB);
     //push(*root);
-    std::cout << "heap: " << heap.size() << std::endl;
+    //std::cout << "heap: " << heap.size() << std::endl;
 }
 
 
@@ -299,7 +299,7 @@ std::vector<Quad*> Quad::get_leaf_nodes(int max_depth) const {
             leaves.insert(leaves.end(), child_leaves.begin(), child_leaves.end());
         }
     }
-    std::cout << "len(leaves): " << leaves.size() << std::endl;
+    //std::cout << "len(leaves): " << leaves.size() << std::endl;
     return leaves;
 }
 

@@ -116,7 +116,7 @@ class Model(object):
             self.push(child)
             self.error_sum += child.error * child.area
         # Create gif, not necrssary
-    def render(self, path, max_depth=1):
+    def render(self, path, max_depth=None):
         m = OUTPUT_SCALE
         dx, dy = (PADDING, PADDING)
         im = Image.new('RGB', (self.width * m + dx, self.height * m + dy))
