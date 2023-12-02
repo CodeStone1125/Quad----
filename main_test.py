@@ -13,7 +13,7 @@ MODE_ELLIPSE = 2
 MODE_ROUNDED_RECTANGLE = 3
 
 MODE = MODE_RECTANGLE
-ITERATIONS = 512
+ITERATIONS = 1024
 LEAF_SIZE = 4
 PADDING = 1
 FILL_COLOR = (0, 0, 0)
@@ -66,8 +66,8 @@ def render(model, path, max_depth=None):
             draw.rectangle(box, color_rgb)
 
         # Save each frame into the "frames" folder
-        frame_path = f"{frames_folder}/out{i:03d}.png"
-        im.save(frame_path, 'PNG')
+        # frame_path = f"{frames_folder}/out{i:03d}.png"
+        # im.save(frame_path, 'PNG')
 
     del draw
     im.save(path, 'PNG')
@@ -117,21 +117,19 @@ def main():
     for child in _children:
         model.push(child)
         #_children = child.split()
-        print(f"children color: ({child.color[0]}, {child.color[1]}, {child.color[2]})")
+        # print(f"children color: ({child.color[0]}, {child.color[1]}, {child.color[2]})")
         model.error_sum += child.error * child.area
-    render(model,'output.jpg')
     for i in range(ITERATIONS-1):
         error = model.averageError()
         if previous is None or previous - error > ERROR_RATE:
             print(i, error)
-            if SAVE_FRAMES:
-                render(model,'frames/%06d.png' % i)
+            # if SAVE_FRAMES:
+            #     render(model,'frames/%06d.png' % i)
             previous = error
         split(model)
     render(model,'output.jpg')
     print('-' * 32)
     heap = model.getQuads()
-    print("model heap size:", len(heap))
     depth = Counter(x.depth for x in heap)
     for key in sorted(depth):
         value = depth[key]
@@ -140,7 +138,6 @@ def main():
         print('%3d %8d %8d %8.2f%%' % (key, n, value, pct))
     print('-' * 32)
     print('             %8d %8.2f%%' % (len(model.getQuads()), 100))
-    print(max(depth))
     # for max_depth in range(max(depth) + 1):
     #    render( model, 'out%d.png' % max_depth)
 

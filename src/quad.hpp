@@ -14,16 +14,13 @@ class Model;
 
 class Quad {
 public:
-    // Constructor
+    //--------------Fountion------------//
     Quad(Model& model, std::tuple<double, double, double, double> box, int depth);
-    // Member functions
     bool is_leaf() const;
     double compute_area();
     std::vector<Quad*>  split();  // Use shared_ptr for children
-    std::vector<Quad*> get_leaf_nodes(int max_depth) const;  // Use shared_ptr for leaf nodes
 
-    // private... maybe... later...
-    // Member variables
+    //--------------Property------------//
     Model* m_model;  // Use a pointer to the Model class
     std::tuple<double, double, double, double> m_box;
     bool m_leaf;
@@ -31,9 +28,23 @@ public:
     int m_depth;
     std::tuple<int, int, int> m_color;
     double m_error;
-
     double m_area;
     std::vector<Quad*>  children;  // Use shared_ptr for children
+
+   
+    //--------------Getter------------//
+    int getDepth() const { return m_depth; }
+    double getArea() const { return m_area; }
+    double getError() const { return m_error;}
+    std::vector<Quad*> getChildren() { return children; }
+    std::tuple<int, int, int> getColor() const { return m_color;}
+    std::tuple<double, double, double, double> getBox() const { return m_box;}
+
+
+    //--------------Setter------------//
+    void setChildren(const std::vector<Quad*>& newChildren) { children = newChildren;}
+    void setColor(const std::tuple<int, int, int>& newColor) { m_color = newColor;}
+    void setDepth(int depth) { m_depth = depth; }
 
     // getLastElement method for Quad
     Quad getLastElement() const {
@@ -46,42 +57,6 @@ public:
         }
     }
 
-    // Getter and setter for m_depth
-    int getDepth() const { return m_depth; }
-    void setDepth(int depth) { m_depth = depth; }
-
-    // Getter for m_box
-    std::tuple<double, double, double, double> getBox() const {
-        return m_box;
-    }
-    // Setter for m_box
-    void setBox(const std::tuple<double, double, double, double>& newBox) {
-        m_box = newBox;
-
-        // After setting the new box, you might want to recalculate related values
-        // hist = calculate_histogram_cv(cropImage(m_model->im, m_box));
-        // m_area = compute_area();
-        // auto result = color_from_histogram(hist);
-        // std::tie(m_color, m_error) = result;
-    }
-    double getArea() const {
-        return m_area;
-    }
-    double getError() const {
-        return m_error;
-    }
-    // Getter for m_color
-    std::tuple<int, int, int> getColor() const {
-        return m_color;
-    }
-
-    // Setter for m_color
-    void setColor(const std::tuple<int, int, int>& newColor) {
-        m_color = newColor;
-    }
-    std::vector<Quad*> getChildren() {return children; }
-    // Setter for children
-    void setChildren(const std::vector<Quad*>& newChildren) {children = newChildren;}
 };
 
 // // For std::priority_queue compare fountion
@@ -94,14 +69,14 @@ struct CompareQuad {
 
 class Model {
 public:
+    //--------------Fountion------------//
     Model(const std::string& path);
     std::vector<Quad> getQuads() const;
     double averageError() const;
     void push(Quad& quad);
     Quad pop();
-    void split();
-    // void render(const std::string& path, int max_depth) const;
-    // private... maybe... later...
+
+    //--------------Property------------//
     cv::Mat im;
     int width;
     int height;
@@ -109,15 +84,16 @@ public:
     std::priority_queue<std::tuple<int, double, Quad>, std::vector<std::tuple<int, double, Quad>>, CompareQuad> heap;
     Quad* root;  // Use a pointer to the Quad class
     double error_sum;
-    // Define properties for width and height
+
+    //--------------Getter------------//
     int getWidth() const { return width; }
     int getHeight() const { return height; }
     Quad* getRoot() const { return root; }
     double getErrorsum(){ return error_sum; }
-        // Setter for error_sum
-    void setErrorSum(double newErrorSum) {
-        error_sum = newErrorSum;
-    }
+
+    //--------------Setter------------//
+    void setErrorSum(double newErrorSum) { error_sum = newErrorSum;}
+
     // Helper function to convert priority_queue to vector
     std::vector<Quad> convertPriorityQueueToVector(const std::priority_queue<std::tuple<int, double, Quad>, std::vector<std::tuple<int, double, Quad>>, CompareQuad>& pq) const {
         std::vector<Quad> vec;
