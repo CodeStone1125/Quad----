@@ -26,6 +26,8 @@ $(BUILD_DIR):
 
 clean:
 	rm -rf $(BUILD_DIR)
+	rm -rf *png *jpg
+	rm -rf frames/*png
 
 try:
 	./run.sh
