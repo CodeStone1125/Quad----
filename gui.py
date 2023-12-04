@@ -289,11 +289,12 @@ class Cleaner(ttk.Frame):
         edge.pack(side=TOP, fill=BOTH, expand=YES, padx=20, pady=10)
 
         # Entry for input
-        input_entry = ttk.Entry(edge, bootstyle=PRIMARY)
-        input_entry.pack(side=LEFT, padx=5)
+        self.input_entry = ttk.Entry(edge, bootstyle=PRIMARY)
+        self.input_entry.insert(0, "1024")  # 將值設置為 1024
+        self.input_entry.pack(side=LEFT, padx=5)
 
         # Set button
-        set_button = ttk.Button(edge, text='Set')
+        set_button = ttk.Button(edge, text='Set', command=self.set_iterations)
         set_button.pack(side=LEFT, padx=5)
 
 
@@ -396,6 +397,13 @@ class Cleaner(ttk.Frame):
             MODE = MODE_ROUNDED_RECTANGLE
         print("Selected Mode:", MODE)
 
+    def set_iterations(self):
+        global ITERATIONS
+        try:
+            ITERATIONS = int(self.input_entry.get())
+            print("ITERATIONS set to:", ITERATIONS)
+        except ValueError:
+            print("Invalid input for ITERATIONS")
 
 
 
