@@ -105,48 +105,6 @@ def get_leaf_nodes(model, max_depth=None):
     
     return leaves
 
-
-def process_image_with_model(image_path):
-    start_time = time.time()  # 開始時間
-
-    args = [image_path]
-    model = quad.Model(args[0])
-    previous = None
-    error = model.averageError()
-    if previous is None or previous - error > ERROR_RATE:
-        if SAVE_FRAMES:
-            render(model, 'frames/%06d.png' % i)
-        previous = error
-    _children = model.root.split()
-    for child in _children:
-        model.push(child)
-        model.error_sum += child.error * child.area
-    for i in range(ITERATIONS - 1):
-        error = model.averageError()
-        if previous is None or previous - error > ERROR_RATE:
-            print(i, error)
-            previous = error
-        split(model)
-    render(model, 'output.jpg')
-    end_time = time.time()  # 結束時間
-    elapsed_time = end_time - start_time  # 實際時間
-
-
-    print(f"elapsed_time：{elapsed_time:.2f} 秒")
-    print('-' * 32)
-    heap = model.getQuads()
-    depth = Counter(x.depth for x in heap)
-    for key in sorted(depth):
-        value = depth[key]
-        n = 4 ** key
-        pct = 100.0 * value / n
-        print('%3d %8d %8d %8.2f%%' % (key, n, value, pct))
-    print('-' * 32)
-    print('             %8d %8.2f%%' % (len(model.getQuads()), 100))
-
-
-
-
 class Cleaner(ttk.Frame):
 
     def __init__(self, master, **kwargs):
@@ -186,8 +144,8 @@ class Cleaner(ttk.Frame):
         
 
         # 在 result card 中加入一個 frame 以放置選擇檔案載入圖片的按鈕
-        action_frame = ttk.Frame(cards_frame, padding=20)
-        action_frame.pack(side=TOP, fill=X)
+        self.action_frame = ttk.Frame(cards_frame, padding=20)
+        self.action_frame.pack(side=TOP, fill=X)
         
         # 定義 priv_card
         self.priv_card = ttk.Frame(
@@ -198,13 +156,24 @@ class Cleaner(ttk.Frame):
 
 
         # 載入圖片的按鈕
-        load_image_btn = ttk.Button(
-            master=action_frame,
+        self.load_image_btn = ttk.Button(
+            master=self.action_frame,
             text='Load Image',
             command=self.load_image
             , bootstyle="primary-outline"
         )
-        load_image_btn.pack(side=TOP, fill=BOTH, ipadx=10, ipady=10)
+        self.load_image_btn.pack(side=TOP, fill=BOTH, ipadx=10, ipady=10)
+
+        # 顯示進度條
+        self.pb = ttk.Progressbar(
+            master=self.action_frame,
+            bootstyle=(SUCCESS, STRIPED),
+            variable='progress'
+        )
+        # self.pb.pack(side=LEFT, fill=X, expand=YES, padx=(15, 10))
+        # ttk.Label(action_frame, text='%').pack(side=RIGHT)
+        # ttk.Label(action_frame, textvariable='progress').pack(side=RIGHT)
+        # self.setvar('progress', 78)
 
         # 處理圖片的程式碼
         original_image = Image.open("./assets/icon_image.png")
@@ -233,21 +202,6 @@ class Cleaner(ttk.Frame):
             padding=40,
         )
         note_frame.pack(fill=BOTH)
-
-        # # progressbar with text indicator
-        # pb_frame = ttk.Frame(note_frame, padding=(0, 10, 10, 10))  # 注意這裡修改成 note_frame
-        # pb_frame.pack(side=TOP, fill=X, expand=YES)
-
-        # pb = ttk.Progressbar(
-        #     master=pb_frame,
-        #     bootstyle=(SUCCESS, STRIPED),
-        #     variable='progress'
-        # )
-        # pb.pack(side=LEFT, fill=X, expand=YES, padx=(15, 10))
-
-        # ttk.Label(pb_frame, text='%').pack(side=RIGHT)
-        # ttk.Label(pb_frame, textvariable='progress').pack(side=RIGHT)
-        # self.setvar('progress', 78)
 
         # option notebook
         notebook = ttk.Notebook(self)
@@ -376,11 +330,11 @@ class Cleaner(ttk.Frame):
             self.after(2000, lambda: self.show_processed_image(file_path))
 
     def show_processed_image(self, file_path):
+
+        self.process_image_with_model(file_path)
         # 清除先前的圖片
         for widget in self.priv_card.winfo_children():
             widget.destroy()
-        process_image_with_model(file_path)
-
         processed_image = Image.open("./output.jpg")
 
         # 計算 cards_frame 的寬度和高度
@@ -396,6 +350,65 @@ class Cleaner(ttk.Frame):
         processed_image_label = ttk.Label(master=self.priv_card, image=processed_image)
         processed_image_label.image = processed_image
         processed_image_label.pack(fill=BOTH, expand=YES)
+
+
+    def process_image_with_model(self, image_path):
+        # 隱藏 load_image_btn
+        self.load_image_btn.pack_forget()
+
+        self.pb.pack(side=LEFT, fill=X, expand=YES, padx=(15, 10))
+        self.label1=ttk.Label(self.action_frame, text='%')
+        self.label1.pack(side=RIGHT)
+        self.label2=ttk.Label(self.action_frame, textvariable='progress')
+        self.label2.pack(side=RIGHT)
+        self.setvar('progress', 0)
+        self.update()
+
+        start_time = time.time()  # 開始時間
+        args = [image_path]
+        model = quad.Model(args[0])
+        previous = None
+        error = model.averageError()
+        if previous is None or previous - error > ERROR_RATE:
+            if SAVE_FRAMES:
+                render(model, 'frames/%06d.png' % i)
+            previous = error
+        _children = model.root.split()
+        for child in _children:
+            model.push(child)
+            model.error_sum += child.error * child.area
+        for i in range(ITERATIONS - 1):
+            error = model.averageError()
+            self.setvar('progress', round((100*i)/ITERATIONS))
+            self.update()
+            if previous is None or previous - error > ERROR_RATE:
+                print(i, error)
+                previous = error
+            split(model)
+        render(model, 'output.jpg')
+
+        self.pb.pack_forget()
+        self.label1.pack_forget()
+        self.label2.pack_forget()
+        # 不在處理中，顯示 load_image_btn
+        self.load_image_btn.pack(side=TOP, fill=BOTH, ipadx=10, ipady=10)
+        self.update()
+
+        end_time = time.time()  # 結束時間
+        elapsed_time = end_time - start_time  # 實際時間
+
+
+        print(f"elapsed_time：{elapsed_time:.2f} 秒")
+        print('-' * 32)
+        heap = model.getQuads()
+        depth = Counter(x.depth for x in heap)
+        for key in sorted(depth):
+            value = depth[key]
+            n = 4 ** key
+            pct = 100.0 * value / n
+            print('%3d %8d %8d %8.2f%%' % (key, n, value, pct))
+        print('-' * 32)
+        print('             %8d %8.2f%%' % (len(model.getQuads()), 100))
 
     def update_mode(self):
         mode_str = self.selected_draw_mode.get()
