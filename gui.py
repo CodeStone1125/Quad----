@@ -231,7 +231,12 @@ class Cleaner(ttk.Frame):
         radio_options = [
             'MODE_RECTANGLE', 'MODE_ELLIPSE', 'MODE_ROUNDED_RECTANGLE'
         ]
+        # static frame in the main frame
 
+        self.download_btn=ttk.Button(scroll_frame, text='Download', command=self.download_image, bootstyle="success-outline")
+        self.download_btn.state(["disabled"]) 
+        self.download_btn.pack(side=BOTTOM, fill=BOTH, padx=20, pady=10, expand=YES)
+        
         # static frame in the main frame
         static_frame = ttk.Labelframe(
             master=scroll_frame,
@@ -292,6 +297,8 @@ class Cleaner(ttk.Frame):
                 self.selected_draw_mode.set(opt)  # 設定變數為 'MODE_RECTANGLE'
             else:
                 rb.configure(state='disabled')  # 禁用其他選項
+        
+
     
         notebook.add(windows_tab, text='windows')
 
@@ -328,6 +335,9 @@ class Cleaner(ttk.Frame):
 
             # 延遲顯示處理後的圖片
             self.after(2000, lambda: self.show_processed_image(file_path))
+
+            # Enable download botton
+            self.download_btn.state(["!disabled"]) 
 
     def show_processed_image(self, file_path):
 
@@ -410,6 +420,20 @@ class Cleaner(ttk.Frame):
         print('-' * 32)
         print('             %8d %8.2f%%' % (len(model.getQuads()), 100))
 
+    def download_image(self):
+        # 取得使用者指定的儲存檔案路徑
+        file_path = filedialog.asksaveasfilename(
+            defaultextension=".jpg",
+            filetypes=[("JPEG files", "*.jpg"), ("All files", "*.*")],
+            title="Save Image As"
+        )
+
+        # 如果使用者選擇了檔案路徑，就進行檔案複製
+        if file_path:
+            import shutil
+            shutil.copyfile("output.jpg", file_path)
+            print("Download success")
+
     def update_mode(self):
         mode_str = self.selected_draw_mode.get()
         if mode_str == 'MODE_RECTANGLE':
@@ -451,7 +475,7 @@ class TextRedirector:
 
 if __name__ == '__main__':
 
-    app = ttk.Window("Quadcompressor", "simplex", resizable=(False, False))
+    app = ttk.Window("QAUD++", "simplex", resizable=(False, False))
     app.geometry("1280x720")  # Set window size
     Cleaner(app)
     app.mainloop()
