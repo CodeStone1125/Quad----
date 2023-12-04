@@ -1,12 +1,13 @@
+import time
+import psutil
 from tkinter import filedialog
+from tkinter import Text
 from PIL import Image, ImageTk
 import ttkbootstrap as ttk
 from ttkbootstrap.constants import *
 from tkinter import StringVar
 from PIL import Image, ImageDraw
 from PIL import Image
-# import cv2
-# import numpy as np
 from collections import Counter
 import sys
 sys.path.append('build')
@@ -106,6 +107,8 @@ def get_leaf_nodes(model, max_depth=None):
 
 
 def process_image_with_model(image_path):
+    start_time = time.time()  # 開始時間
+
     args = [image_path]
     model = quad.Model(args[0])
     previous = None
@@ -125,6 +128,12 @@ def process_image_with_model(image_path):
             previous = error
         split(model)
     render(model, 'output.jpg')
+    end_time = time.time()  # 結束時間
+    elapsed_time = end_time - start_time  # 實際時間
+
+    cpu_time = psutil.Process().cpu_percent()  # CPU 時間
+    print(f"elapsed_time：{elapsed_time:.2f} 秒")
+    print(f"CPU_time：{cpu_time:.2f} %")
     print('-' * 32)
     heap = model.getQuads()
     depth = Counter(x.depth for x in heap)
@@ -135,6 +144,9 @@ def process_image_with_model(image_path):
         print('%3d %8d %8d %8.2f%%' % (key, n, value, pct))
     print('-' * 32)
     print('             %8d %8.2f%%' % (len(model.getQuads()), 100))
+
+
+
 
 
 class Cleaner(ttk.Frame):
@@ -184,7 +196,7 @@ class Cleaner(ttk.Frame):
             master=cards_frame,
             padding=1,
         )
-        self.priv_card.pack(side=LEFT, fill=BOTH, padx=(10, 5), pady=10)
+        self.priv_card.pack(side=TOP, fill=BOTH, padx=(10, 5), pady=10)
 
 
         # 載入圖片的按鈕
@@ -199,24 +211,24 @@ class Cleaner(ttk.Frame):
         note_frame = ttk.Frame(
             master=results_frame, 
             bootstyle=LIGHT, 
-            padding=40
+            padding=40,
         )
         note_frame.pack(fill=BOTH)
 
-        # progressbar with text indicator
-        pb_frame = ttk.Frame(note_frame, padding=(0, 10, 10, 10))  # 注意這裡修改成 note_frame
-        pb_frame.pack(side=TOP, fill=X, expand=YES)
+        # # progressbar with text indicator
+        # pb_frame = ttk.Frame(note_frame, padding=(0, 10, 10, 10))  # 注意這裡修改成 note_frame
+        # pb_frame.pack(side=TOP, fill=X, expand=YES)
 
-        pb = ttk.Progressbar(
-            master=pb_frame,
-            bootstyle=(SUCCESS, STRIPED),
-            variable='progress'
-        )
-        pb.pack(side=LEFT, fill=X, expand=YES, padx=(15, 10))
+        # pb = ttk.Progressbar(
+        #     master=pb_frame,
+        #     bootstyle=(SUCCESS, STRIPED),
+        #     variable='progress'
+        # )
+        # pb.pack(side=LEFT, fill=X, expand=YES, padx=(15, 10))
 
-        ttk.Label(pb_frame, text='%').pack(side=RIGHT)
-        ttk.Label(pb_frame, textvariable='progress').pack(side=RIGHT)
-        self.setvar('progress', 78)
+        # ttk.Label(pb_frame, text='%').pack(side=RIGHT)
+        # ttk.Label(pb_frame, textvariable='progress').pack(side=RIGHT)
+        # self.setvar('progress', 78)
 
         # option notebook
         notebook = ttk.Notebook(self)
@@ -231,7 +243,7 @@ class Cleaner(ttk.Frame):
             selectborderwidth=0,
             highlightthickness=0,
         )
-        wt_canvas.pack(side=LEFT, fill=BOTH)
+        wt_canvas.pack(side=LEFT, fill=BOTH, ipadx=10)  # 設定 ipadx 以進行內部填充
 
         # adjust the scrollregion when the size of the canvas changes
         wt_canvas.bind(
@@ -247,13 +259,42 @@ class Cleaner(ttk.Frame):
             'MODE_RECTANGLE', 'MODE_ELLIPSE', 'MODE_ROUNDED_RECTANGLE'
         ]
 
+        # static frame in the main frame
+        static_frame = ttk.Labelframe(
+            master=scroll_frame,
+            text='STATIC',
+            padding=(20, 5)
+        )
+        static_frame.pack(side=BOTTOM, fill=BOTH, padx=20, pady=10, expand=YES)
+
+        # text element in the static frame
+        self.text_widget = Text(
+            master=static_frame,
+            wrap='word',  # 控制文本如何換行
+            width=30,  # 設定寬度
+            height=18,  # 設定高度
+            state='disabled'  # 設定為禁用，無法編輯
+        )
+        self.text_widget.pack(fill=BOTH, expand=YES)
+
+        # # 創建 Scrollbar 以便捲動 Text
+        # scrollbar = scrollbar(static_frame, command=self.text_widget.yview)
+        # scrollbar.pack(side=RIGHT, fill=Y)
+
+        # # 設定 Text 與 Scrollbar 之間的關聯
+        # self.text_widget.config(yscrollcommand=scrollbar.set)
+
+        # 將 sys.stdout 重新導向到 Text 元件
+        sys.stdout = TextRedirector(self.text_widget, "stdout")
+
+        
         # Input and Set buttons
         edge = ttk.Labelframe(
             master=scroll_frame,
             text='ITERATIONS',
             padding=(20, 5)
         )
-        edge.pack(fill=BOTH, expand=YES, padx=20, pady=10)
+        edge.pack(side=TOP, fill=BOTH, expand=YES, padx=20, pady=10)
 
         # Entry for input
         input_entry = ttk.Entry(edge, bootstyle=PRIMARY)
@@ -271,7 +312,7 @@ class Cleaner(ttk.Frame):
             text='DRAW_MODE',
             padding=(20, 5)
         )
-        explorer.pack(fill=BOTH, padx=20, pady=10, expand=YES)
+        explorer.pack(side=TOP, fill=BOTH, padx=20, pady=10, expand=YES)
 
         # add radio buttons to each label frame section
         for opt in radio_options:
@@ -284,28 +325,69 @@ class Cleaner(ttk.Frame):
         notebook.add(ttk.Frame(notebook), text='about me')
 
     def load_image(self):
-        # UNDO: try to change to display only image options not all option
         file_path = filedialog.askopenfilename(
             title="Select Image",
             filetypes=[("All files", "*.*")]
         )
 
         if file_path:
+            # 清除先前的圖片
+            for widget in self.priv_card.winfo_children():
+                widget.destroy()
+
             # 處理圖片的程式碼
-            image = Image.open(file_path)
-            image = ImageTk.PhotoImage(image)
-            process_image_with_model(file_path)
-            image = Image.open("./output.jpg")
-            image = ImageTk.PhotoImage(image)
+            original_image = Image.open(file_path)
 
-            # 在 result card 中顯示圖片
-            image_label = ttk.Label(master=self.priv_card, image=image)
-            image_label.image = image  # 保留對圖片對象的引用，以防止被垃圾回收
-            image_label.pack(fill=BOTH, expand=YES)
+            # 設定自訂的圖片顯示尺寸
+            desired_width = 850  # 自訂寬度
+            desired_height = 500  # 自訂高度
 
+            # 調整圖片大小以符合自訂的寬度和高度
+            original_image.thumbnail((desired_width, desired_height))
 
+            original_image = ImageTk.PhotoImage(original_image)
 
+            # 在 result card 中顯示原圖
+            original_image_label = ttk.Label(master=self.priv_card, image=original_image)
+            original_image_label.image = original_image
+            original_image_label.pack(fill=BOTH, expand=YES)
 
+            # 延遲顯示處理後的圖片
+            self.after(2000, lambda: self.show_processed_image(file_path))
+
+    def show_processed_image(self, file_path):
+        # 清除先前的圖片
+        for widget in self.priv_card.winfo_children():
+            widget.destroy()
+        process_image_with_model(file_path)
+
+        processed_image = Image.open("./output.jpg")
+
+        # 計算 cards_frame 的寬度和高度
+        frame_width = self.priv_card.winfo_width()
+        frame_height = self.priv_card.winfo_height()
+
+        # 調整圖片大小以符合 cards_frame 的寬度和高度
+        processed_image.thumbnail((frame_width, frame_height))
+
+        processed_image = ImageTk.PhotoImage(processed_image)
+
+        # 在 result card 中顯示處理後的圖片
+        processed_image_label = ttk.Label(master=self.priv_card, image=processed_image)
+        processed_image_label.image = processed_image
+        processed_image_label.pack(fill=BOTH, expand=YES)
+
+# TextRedirector 類別用於將 stdout 重定向到 Tkinter Text 元件
+class TextRedirector:
+    def __init__(self, widget, tag="stdout"):
+        self.widget = widget
+        self.tag = tag
+
+    def write(self, str):
+        self.widget.config(state='normal')
+        self.widget.insert("end", str, (self.tag,))
+        self.widget.config(state='disabled')
+        self.widget.see("end")
 
 
 if __name__ == '__main__':
