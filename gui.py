@@ -315,10 +315,10 @@ class Cleaner(ttk.Frame):
         # 設定初始選擇
         self.selected_draw_mode.set(radio_options[0])  # 這裡使用第一個選項作為初始選擇
             
-            # if opt == 'MODE_RECTANGLE':
-            #     self.selected_draw_mode.set(opt)  # 設定變數為 'MODE_RECTANGLE'
-            # else:
-            #     rb.configure(state='disabled')  # 禁用其他選項
+        if opt == 'MODE_RECTANGLE':
+            self.selected_draw_mode.set(opt)  # 設定變數為 'MODE_RECTANGLE'
+        else:
+            rb.configure(state='disabled')  # 禁用其他選項
     
         notebook.add(windows_tab, text='windows')
 
