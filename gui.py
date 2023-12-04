@@ -292,6 +292,8 @@ class Cleaner(ttk.Frame):
 
         if file_path:
             # 處理圖片的程式碼
+            image = Image.open(file_path)
+            image = ImageTk.PhotoImage(image)
             process_image_with_model(file_path)
             image = Image.open("./output.jpg")
             image = ImageTk.PhotoImage(image)
