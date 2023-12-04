@@ -176,7 +176,7 @@ class Cleaner(ttk.Frame):
         # self.setvar('progress', 78)
 
         # 處理圖片的程式碼
-        original_image = Image.open("./assets/icon_image.png")
+        original_image = Image.open("./assets/lion.png")
 
         # 設定自訂的圖片顯示尺寸
         desired_width = 850  # 自訂寬度
