@@ -27,15 +27,6 @@ $(BUILD_DIR):
 clean:
 	rm -rf $(BUILD_DIR)
 	rm -rf *png *jpg
-	rm -rf frames/*png
 
-try:
-	./run.sh
-
-test: $(BUILD_DIR)/$(TARGET)
-	python3 -m pytest test_quad.py
-
-example:
-	python3 main.py assets/star.jpg
 
 .PHONY: all clean test
