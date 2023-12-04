@@ -153,20 +153,20 @@ class Cleaner(ttk.Frame):
         super().__init__(master, **kwargs)
         self.pack(fill=BOTH, expand=YES)
 
-        # header
-        hdr_frame = ttk.Frame(self, padding=20, bootstyle=INFO)
-        hdr_frame.grid(row=0, column=0, columnspan=3, sticky=EW)
+        # # header
+        # hdr_frame = ttk.Frame(self, padding=20, bootstyle=SECONDARY)
+        # hdr_frame.grid(row=0, column=0, columnspan=3, sticky=EW)
 
-        # 設定列的權重，使hdr_frame寬度與視窗一致
-        self.columnconfigure(0, weight=1)
+        # # 設定列的權重，使hdr_frame寬度與視窗一致
+        # self.columnconfigure(0, weight=1)
 
-        hdr_label = ttk.Label(
-            master=hdr_frame,
-            text='Quadra compressor',
-            font=('TkDefaultFixed', 30),
-            bootstyle=(INVERSE, INFO)
-        )
-        hdr_label.pack(side=LEFT, padx=10)
+        # hdr_label = ttk.Label(
+        #     master=hdr_frame,
+        #     text='Quadra compressor',
+        #     font=('TkDefaultFixed', 30),
+        #     bootstyle=(INVERSE, SECONDARY)
+        # )
+        # hdr_label.pack(side=LEFT, padx=10)
 
         # results frame
         results_frame = ttk.Frame(self)
@@ -202,8 +202,29 @@ class Cleaner(ttk.Frame):
             master=action_frame,
             text='Load Image',
             command=self.load_image
+            , bootstyle="primary-outline"
         )
         load_image_btn.pack(side=TOP, fill=BOTH, ipadx=10, ipady=10)
+
+        # 處理圖片的程式碼
+        original_image = Image.open("./assets/icon_image.png")
+
+        # 設定自訂的圖片顯示尺寸
+        desired_width = 850  # 自訂寬度
+        desired_height = 750  # 自訂高度
+
+        # 調整圖片大小以符合自訂的寬度和高度
+        original_image.thumbnail((desired_width, desired_height))
+
+        original_image = ImageTk.PhotoImage(original_image)
+
+        # 在 result card 中顯示原圖
+        original_image_label = ttk.Label(master=self.priv_card, image=original_image)
+        original_image_label.image = original_image
+        original_image_label.pack(fill=BOTH, expand=YES)
+
+        # # 延遲顯示處理後的圖片
+        # self.after(2000, lambda: self.show_processed_image(file_path))
 
         # user notification
         note_frame = ttk.Frame(
@@ -289,12 +310,12 @@ class Cleaner(ttk.Frame):
         edge.pack(side=TOP, fill=BOTH, expand=YES, padx=20, pady=10)
 
         # Entry for input
-        self.input_entry = ttk.Entry(edge, bootstyle=PRIMARY)
+        self.input_entry = ttk.Entry(edge, bootstyle=DARK)
         self.input_entry.insert(0, "1024")  # 將值設置為 1024
         self.input_entry.pack(side=LEFT, padx=5)
 
         # Set button
-        set_button = ttk.Button(edge, text='Set', command=self.set_iterations)
+        set_button = ttk.Button(edge, text='Set', command=self.set_iterations, bootstyle="info-outline")
         set_button.pack(side=LEFT, padx=5)
 
 
@@ -310,7 +331,7 @@ class Cleaner(ttk.Frame):
 
         # add radio buttons to each label frame section
         for opt in radio_options:
-            rb = ttk.Radiobutton(explorer, text=opt, variable=self.selected_draw_mode, value=opt, command=self.update_mode)
+            rb = ttk.Radiobutton(explorer, text=opt, variable=self.selected_draw_mode, value=opt, command=self.update_mode, bootstyle=INFO)
             rb.pack(side=TOP, pady=2, fill=X)
                 
             if opt == 'MODE_RECTANGLE':
@@ -376,17 +397,6 @@ class Cleaner(ttk.Frame):
         processed_image_label.image = processed_image
         processed_image_label.pack(fill=BOTH, expand=YES)
 
-# def update_mode(selected_draw_mode):
-#     mode_str = selected_draw_mode
-    
-#     if mode_str == 'MODE_RECTANGLE':
-#         MODE = MODE_RECTANGLE
-#     elif mode_str == 'MODE_ELLIPSE':
-#         MODE = MODE_ELLIPSE
-#     elif mode_str == 'MODE_ROUNDED_RECTANGLE':
-#         MODE = MODE_ROUNDED_RECTANGLE
-
-    #     print("Selected Mode:", MODE)
     def update_mode(self):
         mode_str = self.selected_draw_mode.get()
         if mode_str == 'MODE_RECTANGLE':
@@ -428,7 +438,7 @@ class TextRedirector:
 
 if __name__ == '__main__':
 
-    app = ttk.Window("PC Cleaner", "simplex", resizable=(False, False))
+    app = ttk.Window("Quadcompressor", "simplex", resizable=(False, False))
     app.geometry("1280x720")  # Set window size
     Cleaner(app)
     app.mainloop()
