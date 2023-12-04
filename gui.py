@@ -311,14 +311,11 @@ class Cleaner(ttk.Frame):
         for opt in radio_options:
             rb = ttk.Radiobutton(explorer, text=opt, variable=self.selected_draw_mode, value=opt, command=self.update_mode)
             rb.pack(side=TOP, pady=2, fill=X)
-
-        # 設定初始選擇
-        self.selected_draw_mode.set(radio_options[0])  # 這裡使用第一個選項作為初始選擇
-            
-        if opt == 'MODE_RECTANGLE':
-            self.selected_draw_mode.set(opt)  # 設定變數為 'MODE_RECTANGLE'
-        else:
-            rb.configure(state='disabled')  # 禁用其他選項
+                
+            if opt == 'MODE_RECTANGLE':
+                self.selected_draw_mode.set(opt)  # 設定變數為 'MODE_RECTANGLE'
+            else:
+                rb.configure(state='disabled')  # 禁用其他選項
     
         notebook.add(windows_tab, text='windows')
 
