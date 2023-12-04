@@ -131,9 +131,8 @@ def process_image_with_model(image_path):
     end_time = time.time()  # 結束時間
     elapsed_time = end_time - start_time  # 實際時間
 
-    cpu_time = psutil.Process().cpu_percent()  # CPU 時間
+
     print(f"elapsed_time：{elapsed_time:.2f} 秒")
-    print(f"CPU_time：{cpu_time:.2f} %")
     print('-' * 32)
     heap = model.getQuads()
     depth = Counter(x.depth for x in heap)
@@ -144,7 +143,6 @@ def process_image_with_model(image_path):
         print('%3d %8d %8d %8.2f%%' % (key, n, value, pct))
     print('-' * 32)
     print('             %8d %8.2f%%' % (len(model.getQuads()), 100))
-
 
 
 
@@ -277,12 +275,6 @@ class Cleaner(ttk.Frame):
         )
         self.text_widget.pack(fill=BOTH, expand=YES)
 
-        # # 創建 Scrollbar 以便捲動 Text
-        # scrollbar = scrollbar(static_frame, command=self.text_widget.yview)
-        # scrollbar.pack(side=RIGHT, fill=Y)
-
-        # # 設定 Text 與 Scrollbar 之間的關聯
-        # self.text_widget.config(yscrollcommand=scrollbar.set)
 
         # 將 sys.stdout 重新導向到 Text 元件
         sys.stdout = TextRedirector(self.text_widget, "stdout")
@@ -304,8 +296,6 @@ class Cleaner(ttk.Frame):
         set_button = ttk.Button(edge, text='Set')
         set_button.pack(side=LEFT, padx=5)
 
-        # 使用 StringVar 來控制選擇
-        selected_draw_mode = StringVar()
 
         explorer = ttk.Labelframe(
             master=scroll_frame,
@@ -314,11 +304,22 @@ class Cleaner(ttk.Frame):
         )
         explorer.pack(side=TOP, fill=BOTH, padx=20, pady=10, expand=YES)
 
+        # 使用 StringVar 來控制選擇
+        self.selected_draw_mode = StringVar()
+
         # add radio buttons to each label frame section
         for opt in radio_options:
-            rb = ttk.Radiobutton(explorer, text=opt, variable=selected_draw_mode, value=opt)
+            rb = ttk.Radiobutton(explorer, text=opt, variable=self.selected_draw_mode, value=opt, command=self.update_mode)
             rb.pack(side=TOP, pady=2, fill=X)
 
+        # 設定初始選擇
+        self.selected_draw_mode.set(radio_options[0])  # 這裡使用第一個選項作為初始選擇
+            
+            # if opt == 'MODE_RECTANGLE':
+            #     self.selected_draw_mode.set(opt)  # 設定變數為 'MODE_RECTANGLE'
+            # else:
+            #     rb.configure(state='disabled')  # 禁用其他選項
+    
         notebook.add(windows_tab, text='windows')
 
         # empty tab for looks
@@ -377,6 +378,31 @@ class Cleaner(ttk.Frame):
         processed_image_label.image = processed_image
         processed_image_label.pack(fill=BOTH, expand=YES)
 
+# def update_mode(selected_draw_mode):
+#     mode_str = selected_draw_mode
+    
+#     if mode_str == 'MODE_RECTANGLE':
+#         MODE = MODE_RECTANGLE
+#     elif mode_str == 'MODE_ELLIPSE':
+#         MODE = MODE_ELLIPSE
+#     elif mode_str == 'MODE_ROUNDED_RECTANGLE':
+#         MODE = MODE_ROUNDED_RECTANGLE
+
+    #     print("Selected Mode:", MODE)
+    def update_mode(self):
+        mode_str = self.selected_draw_mode.get()
+        if mode_str == 'MODE_RECTANGLE':
+            MODE = MODE_RECTANGLE
+        elif mode_str == 'MODE_ELLIPSE':
+            MODE = MODE_ELLIPSE
+        elif mode_str == 'MODE_ROUNDED_RECTANGLE':
+            MODE = MODE_ROUNDED_RECTANGLE
+        print("Selected Mode:", MODE)
+
+
+
+
+
 # TextRedirector 類別用於將 stdout 重定向到 Tkinter Text 元件
 class TextRedirector:
     def __init__(self, widget, tag="stdout"):
@@ -385,9 +411,14 @@ class TextRedirector:
 
     def write(self, str):
         self.widget.config(state='normal')
-        self.widget.insert("end", str, (self.tag,))
+        #
+        self.widget.insert("end", str, (self.tag,))  # 再插入新文本
+        self.widget.update()  # 立即更新
         self.widget.config(state='disabled')
         self.widget.see("end")
+    def flush(self):
+        pass  # 簡單的 pass，因為我們不需要實際的 flush 操作
+
 
 
 if __name__ == '__main__':
