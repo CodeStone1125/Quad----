@@ -176,7 +176,7 @@ class Cleaner(ttk.Frame):
         # self.setvar('progress', 78)
 
         # 處理圖片的程式碼
-        original_image = Image.open("./assets/lion.png")
+        original_image = Image.open("./assets/lion.jpg")
 
         # 設定自訂的圖片顯示尺寸
         desired_width = 850  # 自訂寬度
@@ -475,7 +475,7 @@ class TextRedirector:
 
 if __name__ == '__main__':
 
-    app = ttk.Window("QAUD++", "simplex", resizable=(False, False))
+    app = ttk.Window("QAUD----", "simplex", resizable=(False, False))
     app.geometry("1280x720")  # Set window size
     Cleaner(app)
     app.mainloop()
