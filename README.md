@@ -1,4 +1,4 @@
-## Quads
+## Quad----
 
 Computer art based on quadtrees.
 
