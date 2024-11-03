@@ -8,6 +8,14 @@ The program targets an input image. The input image is split into four quadrants
 1. I develop a front-end GUI using `Python3`, with a `C++` back-end implementing a Quadtree library.
 2.  `Pybind11` is used for integrating the front-end and back-end. Utilize `OpenCV` for image cropping and drawing.
 3. The GUI is implemented using `TKinter`, and a `Makefile` is written for convenient maintenance of the program.
+
+### Enviroment
+1. Platform: `Linux 22.04`, 
+2. Programming Language:  `C++`,  `Python`, `Shell`
+3. Module: `TKinter`, `Pybind11`, `OpenCV`
+4. Other: `Makefile`, `VScode`, `VScode`
+
+
 ### Animation
 
 The first animation shows the natural iterative process of the algorithm.
